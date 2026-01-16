@@ -199,7 +199,7 @@ subroutine read_CDFT_configuration(ifPrint)
         parity_char = ['+','-']
         
         write(*,"(a)") '============================================================================================'
-        if(option%eqType==0) write(*,'(5x,A)') 'Solve Dirac Equation :'
+        if(option%eqType==0) write(*,'(5x,A)') 'Solve Dirac (BCS) Equation :'
         if(option%eqType==1) write(*,'(5x,A)') 'Solve RHB Equation :'
         write(*,"(5x,a,':   ',a3,i4)") adjust_left('Nucleus',35), input_par%nucleus_name, input_par%nucleus_mass_number
 
@@ -461,7 +461,7 @@ end function find_file
 
 subroutine write_result_DIR
     use Expectation, only: calculate_expectation_DIR
-    call calculate_expectation_DIR(.True.)
+    call calculate_expectation_DIR(.True.) ! keep True
     call print_single_particle_energies
     call write_expectation
     call write_wavefuntion

@@ -31,7 +31,8 @@ subroutine solve_RHB_equation(ifPrint)
     !--------------------------------------------------------------------------
     use MathMethods, only: sdiag
     use Constants, only: zero,half,one,NHBQX,NBX, NHBX
-    use Globals, only: dirac, pairing,BS
+    use Globals, only: dirac, pairing,BS,iteration
+    use Broyden, only: set_initial_matrix_elements_RHB
 
     logical,intent(in),optional :: ifPrint
     integer :: it,lit,klp,kla, ib,mul,nf,ng,nh,nhb,m,n2,n1,k,n
@@ -40,6 +41,10 @@ subroutine solve_RHB_equation(ifPrint)
     real(r64), dimension(NHBX) :: e,ez
     real(r64) :: epsi = 1.d-8
     integer :: maxl = 200
+
+    ! the initial RHB matrix elements are calculated in the first iteration
+    ! the subsequent matrix elements are calculated by mix_matrix_elements_RHB.
+    if(iteration%ii .eq. 1) call set_initial_matrix_elements_RHB
 
     do it=1,2
         dl = 100.d0

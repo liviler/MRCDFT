@@ -38,7 +38,7 @@ subroutine set_broyden_parameters
     allocate(dv(nn,mm))
 end subroutine set_broyden_parameters
 
-subroutine store_initial_matrix_elements_RHB
+subroutine set_initial_matrix_elements_RHB
     use Constants, only: NHHX,NB2X
     use Globals, only: BS,dirac,RHB_pairing,pairing
     use DiracEquation, only: calculate_all_dirac_matrix
@@ -83,7 +83,7 @@ subroutine store_initial_matrix_elements_RHB
     vin(ipos) = constraint%c2x ! constraint potential Quardrupole
     ipos = ipos + 1
     vin(ipos) = constraint%c3x ! constraint potential Octupole
-end subroutine store_initial_matrix_elements_RHB
+end subroutine set_initial_matrix_elements_RHB
 
 subroutine mix_matrix_elements_RHB
     use Globals, only: BS,dirac,RHB_pairing,pairing,constraint
