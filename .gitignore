@@ -1,0 +1,12 @@
+bin/
+output
+.dens
+*.out
+*.wel
+*.wf
+*.elem
+obj
+*.o
+mod
+*.mod
+
