@@ -615,10 +615,8 @@ type Mixed_
     ! mixed ... matrix elements
     ! rho_mm^{++/--/+-/-+}(alpha,beta,gamma,phi_it,it) with fixed alpha, beta,gamma
     complex(r64),dimension(:,:,:,:,:), allocatable :: rho_mm, prho_mm ! (m,m',++/--/+-/-+,phi_it,it)
-    complex(r64),dimension(:,:,:,:,:), allocatable :: kappa_mm, kappac_mm ! (m,m',++/--,phi_it,it)
-    complex(r64),dimension(:,:,:,:,:), allocatable :: pkappa_mm, pkappac_mm ! (m,m',++/--,phi_it,it)
-    complex(r64),dimension(:,:,:,:,:), allocatable :: kappa10_mm, kappa01c_mm ! (m,m',++/--,phi_it,it)
-    complex(r64),dimension(:,:,:,:,:), allocatable :: pkappa10_mm, pkappa01c_mm ! (m,m',++/--,phi_it,it)
+    complex(r64),dimension(:,:,:,:,:), allocatable :: kappa_mm, kappac_mm, pkappa_mm, pkappac_mm  ! (m,m',++/--,phi_it,it)
+    complex(r64),dimension(:,:,:,:,:), allocatable :: kappa10_mm, kappa01c_mm, pkappa10_mm, pkappa01c_mm ! (m,m',++/--,phi_it,it)
     ! mixed ... in coordinate space
     ! rho_S_it((x,theta,phi),phi_it,it)
     complex(r64),dimension(:,:,:), allocatable :: rho_S_it, prho_S_it
@@ -643,15 +641,24 @@ type Kernel_
 endtype 
 type(Kernel_) :: kernels
 
+type Proj_densities_
+    ! mix density matrix elements
+    complex(r64),dimension(:,:,:,:,:), allocatable :: norm, pnorm           ! (phi_it,it,alpha,beta,gamma) ! Assigned from mix%norm and mix%pnorm
+    complex(r64),dimension(:,:,:,:,:,:,:,:), allocatable :: rho_mm, prho_mm ! (m,m',++/--,phi_it,it,alpha,beta,gamma) ! Assigned from mix%rho_mm and mix%prho_mm
+    complex(r64),dimension(:,:,:,:,:,:,:,:), allocatable :: kappa10_mm, kappa01c_mm, pkappa10_mm, pkappa01c_mm ! (m,m',++/--,phi_it,it,alpha,beta,gamma) ! Assigned from mix%kappa10_mm ...
+    ! 1B density matrix element
+    complex(r64), dimension(:,:,:,:,:,:,:,:), allocatable :: ME1B ! (Jf,K,K',Pi(+/-),it,ifg,m,m')
+    ! 2B density matrix element
+    complex(r64), dimension(:,:,:,:,:,:,:,:,:,:), allocatable :: ME2B ! (Jf,K,K',Pi(+/-),it,ifg,m1,m2,m3,m4)
+end type
+type(Proj_densities_) :: Proj_densities
+
 type transition_density
     integer :: lambda_max
-    complex(r64),dimension(:,:,:,:,:), allocatable :: norm, pnorm
     integer :: nlj_index(nt3x,2), nlj_length(2)
-    ! mix density matrix elements
-    complex(r64),dimension(:,:,:,:,:,:,:,:), allocatable :: rho_mm, prho_mm ! (m,m',++/--,phi_it,it,alpha,beta,gamma)
     ! 1B transition density matrix elements
-    complex(r64), dimension(:,:,:,:,:,:,:,:,:,:,:), allocatable :: reduced_TD1B ! (Jf,Kf,Parity_f,lambda,Ji,Ki,Parity_i,ifg,a,b,it), <Jf Kf Parity_f qf|| M_lambda || Ji Ki Parity_i qi>
-    complex(r64), dimension(:,:,:,:,:,:,:,:,:,:,:), allocatable :: reduced_TD1B_c
+    complex(r64), dimension(:,:,:,:,:,:,:,:,:,:,:), allocatable :: reduced_TDME1B   ! (Jf,Kf,Parity_f,lambda,Ji,Ki,Parity_i,ifg,a,b,it), <Jf Kf Parity_f qf|| M_lambda || Ji Ki Parity_i qi>
+    complex(r64), dimension(:,:,:,:,:,:,:,:,:,:,:), allocatable :: reduced_TDME1B_c ! (Jf,Kf,Parity_f,lambda,Ji,Ki,Parity_i,ifg,a,b,it), <Jf Kf Parity_f qi|| M_lambda || Ji Ki Parity_i qf>
 endtype
 type(transition_density) TDs
 

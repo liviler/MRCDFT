@@ -129,7 +129,7 @@ Module Kernel
 
     subroutine calculate_overlaps_arrays
         use Globals, only: projection_mesh,pko_option
-        use TD, only: store_mix_density_matrix_elements
+        use Proj_Density, only: store_mix_density_matrix_elements
         use CDFT_Inout, only: adjust_left
         complex(r64) :: Norm_PNP_Euler, pNorm_PNP_Euler, Etot_PNP_Euler, pEtot_PNP_Euler, Particle_PNP_Euler(2), pParticle_PNP_Euler(2),r2_PNP(2),pr2_PNP(2)
         complex(r64), dimension(-2:2,2) :: Q2m_PNP_Euler, pQ2m_PNP_Euler, cQ2m_PNP_Euler, pcQ2m_PNP_Euler
