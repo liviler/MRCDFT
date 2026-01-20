@@ -270,7 +270,7 @@ subroutine set_pko_output_filename(q1,q2,AMPType)
                         //signb31//char(name1(4))//char(name1(5))//char(name1(6)) &
                         //'_'//signb22//char(name2(1))//char(name2(2))//char(name2(3)) &
                         //signb32//char(name2(4))//char(name2(5))//char(name2(6))//'.elem'
-    outputfile%outputTD1B = OUTPUT_PATH//'TD1B.'//char(AMP)//'D' &
+    outputfile%outputTDME1B = OUTPUT_PATH//'TD1B.'//char(AMP)//'D' &
                         //'_eMax'//char(name_nf1)//char(name_nf2) &
                         //'.'//char(nphi_1)//char(nphi_2) &
                         //'.'//char(nbeta_1)//char(nbeta_2) &
@@ -278,7 +278,7 @@ subroutine set_pko_output_filename(q1,q2,AMPType)
                         //signb31//char(name1(4))//char(name1(5))//char(name1(6)) &
                         //'_'//signb22//char(name2(1))//char(name2(2))//char(name2(3)) &
                         //signb32//char(name2(4))//char(name2(5))//char(name2(6))//'.dens'
-    outputfile%outputTD1B_c = OUTPUT_PATH//'TD1B.'//char(AMP)//'D' &
+    outputfile%outputTDME1B_c = OUTPUT_PATH//'TD1B.'//char(AMP)//'D' &
                         //'_eMax'//char(name_nf1)//char(name_nf2) &
                         //'.'//char(nphi_1)//char(nphi_2) &
                         //'.'//char(nbeta_1)//char(nbeta_2) &
@@ -330,12 +330,12 @@ subroutine write_reduced_1B_transition_density_matrix_elements(q1,q2)
     character(1), dimension(2) :: ParityChar = ['+', '-']
     character(1) :: Parity_f_c,Parity_i_c
     ! q1-q2
-    open(outputfile%u_outputTD1B ,form='formatted',file=outputfile%outputTD1B)
-    write(outputfile%u_outputTD1B,*) "Pf Pi  Jf  Ji  l   Kf  Ki  ifg a   b    neutron            proton"
+    open(outputfile%u_outputTDME1B ,form='formatted',file=outputfile%outputTDME1B)
+    write(outputfile%u_outputTDME1B,*) "Pf Pi  Jf  Ji  l   Kf  Ki  ifg a   b    neutron            proton"
     ! q2-q1
     if (pko_option%Kernel_Symmetry == 1 .and. q1/=q2) then
-        open(outputfile%u_outputTD1B_c ,form='formatted',file=outputfile%outputTD1B_c)
-        write(outputfile%u_outputTD1B_c,*) "Pf Pi  Jf  Ji  l   Kf  Ki  ifg a   b    neutron            proton"
+        open(outputfile%u_outputTDME1B_c ,form='formatted',file=outputfile%outputTDME1B_c)
+        write(outputfile%u_outputTDME1B_c,*) "Pf Pi  Jf  Ji  l   Kf  Ki  ifg a   b    neutron            proton"
     end if 
     do Ji = gcm_space%Jmin, gcm_space%Jmax, gcm_space%Jstep
         do Jf = Ji, Ji+TDs%lambda_max
@@ -362,13 +362,13 @@ subroutine write_reduced_1B_transition_density_matrix_elements(q1,q2)
                                     do iPf = 1,2
                                         Parity_f = (-1)**(iPf+1) ! 1: +1 , 2: -1
                                         Parity_f_c = ParityChar(iPf)
-                                        write(outputfile%u_outputTD1B,"(1x,a1,2x,a1,8i4,2x,2f18.14)") Parity_f_c,Parity_i_c,Jf,Ji,lambda,Kf,Ki,ifg,a,b, &
-                                            Real(TDs%reduced_TD1B(Jf,Kf,iPf,lambda,Ji,Ki,iPi,ifg,a,b,1)),&
-                                            Real(TDs%reduced_TD1B(Jf,Kf,iPf,lambda,Ji,Ki,iPi,ifg,a,b,2))
+                                        write(outputfile%u_outputTDME1B,"(1x,a1,2x,a1,8i4,2x,2f18.14)") Parity_f_c,Parity_i_c,Jf,Ji,lambda,Kf,Ki,ifg,a,b, &
+                                            Real(TDs%reduced_TDME1B(Jf,Kf,iPf,lambda,Ji,Ki,iPi,ifg,a,b,1)),&
+                                            Real(TDs%reduced_TDME1B(Jf,Kf,iPf,lambda,Ji,Ki,iPi,ifg,a,b,2))
                                         if (pko_option%Kernel_Symmetry == 1 .and. q1/=q2) then
-                                            write(outputfile%u_outputTD1B_c,"(1x,a1,2x,a1,8i4,2x,2f18.14)")Parity_f_c,Parity_i_c,Jf,Ji,lambda,Kf,Ki,ifg,a,b, &
-                                                Real(TDs%reduced_TD1B_c(Jf,Kf,iPf,lambda,Ji,Ki,iPi,ifg,a,b,1)),&
-                                                Real(TDs%reduced_TD1B_c(Jf,Kf,iPf,lambda,Ji,Ki,iPi,ifg,a,b,2))
+                                            write(outputfile%u_outputTDME1B_c,"(1x,a1,2x,a1,8i4,2x,2f18.14)")Parity_f_c,Parity_i_c,Jf,Ji,lambda,Kf,Ki,ifg,a,b, &
+                                                Real(TDs%reduced_TDME1B_c(Jf,Kf,iPf,lambda,Ji,Ki,iPi,ifg,a,b,1)),&
+                                                Real(TDs%reduced_TDME1B_c(Jf,Kf,iPf,lambda,Ji,Ki,iPi,ifg,a,b,2))
                                         end if 
                                     end do
                                 end do 
@@ -379,9 +379,9 @@ subroutine write_reduced_1B_transition_density_matrix_elements(q1,q2)
             end do
         end do 
     end do
-    close(outputfile%u_outputTD1B)
+    close(outputfile%u_outputTDME1B)
     if (pko_option%Kernel_Symmetry == 1 .and. q1/=q2) then 
-        close(outputfile%u_outputTD1B)
+        close(outputfile%u_outputTDME1B_c)
     end if 
 end subroutine
 

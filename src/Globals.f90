@@ -387,10 +387,10 @@ type Output_FileName
     character(len=60) :: outputelem
     integer :: u_outputelem = u_config + 6
     ! TD1B
-    character(len=60) :: outputTD1B ! q1-q2
-    integer :: u_outputTD1B = u_config + 7
-    character(len=60) :: outputTD1B_c ! q2-q1
-    integer :: u_outputTD1B_c = u_config + 8
+    character(len=60) :: outputTDME1B ! q1-q2
+    integer :: u_outputTDME1B = u_config + 7
+    character(len=60) :: outputTDME1B_c ! q2-q1
+    integer :: u_outputTDME1B_c = u_config + 8
     ! MEelem
     character(len=60) :: outputEMelem
     integer :: u_outputEMelem = u_config + 9
