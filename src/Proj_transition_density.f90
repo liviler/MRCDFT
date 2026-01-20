@@ -8,45 +8,6 @@ Module TD
     use Globals, only: TDs
     implicit none
     contains
-    subroutine store_mix_density_matrix_elements(ialpha,ibeta,igamma)
-        !---------------------------------------------------
-        ! store mix density matrix elements
-        !-------------------------------------------------
-        use Constants, only: itx
-        use Globals, only: BS,mix,projection_mesh,pko_option
-        integer,intent(in) :: ialpha,ibeta,igamma
-        integer :: dim_m_max, nphi_max, nalpha, nbeta, ngamma
-        dim_m_max = max(BS%HO_sph%idsp(1,1), BS%HO_sph%idsp(1,2))
-        nphi_max = max(projection_mesh%nphi(1),projection_mesh%nphi(2))
-        nalpha = projection_mesh%nalpha
-        nbeta = projection_mesh%nbeta
-        ngamma = projection_mesh%ngamma
-        if(.not. allocated(TDs%rho_mm)) allocate(TDs%rho_mm(dim_m_max,dim_m_max,2,nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0)) !(m,m',++/--,phi_it,it,alpha,beta,gamma)
-        if(.not. allocated(TDs%prho_mm)) allocate(TDs%prho_mm(dim_m_max,dim_m_max,2,nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0))
-        if(.not. allocated(TDs%norm)) allocate(TDs%norm(nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0))
-        if(.not. allocated(TDs%pnorm)) allocate(TDs%pnorm(nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0))
-
-        ! we have to implement the symmetry of rho_mm
-        if(pko_option%Euler_Symmetry>=1 .and. ialpha > (nalpha+1)/2 ) then
-            write(*,*) '[alpha symmetry of rho_mm] Not yet implemented.... '
-            return 
-        end if
-        if(pko_option%Euler_Symmetry>=1 .and. ibeta > (nbeta+1)/2 ) then
-            if(pko_option%Euler_Symmetry == 1) then
-                ! write(*,*) '[beta symmetry of rho_mm] Not yet implemented  .... ' 
-                ! we can simply multiply by 2 without integrating over [pi/2, pi ]
-            else if(pko_option%Euler_Symmetry == 2) then
-                write(*,*) '[beta symmetry of rho_mm] Not yet implemented  .... ' 
-            end if 
-            return
-        end if 
-
-        TDs%rho_mm(:,:,1:2,:,:,ialpha,ibeta,igamma) = mix%rho_mm(:,:,1:2,:,:)
-        TDs%prho_mm(:,:,1:2,:,:,ialpha,ibeta,igamma) = mix%prho_mm(:,:,1:2,:,:)
-        TDs%norm(:,:,ialpha,ibeta,igamma) = mix%norm(:,:)
-        TDs%pnorm(:,:,ialpha,ibeta,igamma) = mix%pnorm(:,:)
-    end subroutine
-
     subroutine calcualte_reduced_transition_density_matrix_element(q1,q2)
         !-----------------------------------------------------------------
         !
@@ -54,15 +15,15 @@ Module TD
         ! 
         ! 
         !  1B:
-        !  TDs%reduced_TD1B   =  <Jf Kf Parity_f qf|| M_lambda || Ji Ki Parity_i qi>
-        !  TDs%reduced_TD1B_c =  <Jf Kf Parity_f qi|| M_lambda || Ji Ki Parity_i qf>
+        !  TDs%reduced_TDME1B   =  <Jf Kf Parity_f qf|| M_lambda || Ji Ki Parity_i qi>
+        !  TDs%reduced_TDME1B_c =  <Jf Kf Parity_f qi|| M_lambda || Ji Ki Parity_i qf>
         !      where M_lambda = [c_a^\dagger \tilde{c}_b]_\lambda
         !
         !-----------------------------------------------------------------
         use Globals, only: gcm_space,pko_option,BS
         integer, intent(in) :: q1,q2
         integer :: J,Ji,Jf,lambda,Ki_start,Ki_end,Kf_start,Kf_end,Kf,Ki,ifg,a,b,Parity_i,Parity_f,iPi,iPf
-        complex(r64) :: reduced_TD1B(2),reduced_TD1B_c(2)
+        complex(r64) :: reduced_TDME1B(2),reduced_TDME1B_c(2)
         logical :: q2_q1_Symmetry
         write(*,'(5x,A)') 'calcualte_reduced_transition_density_matrix_element ...'
         call set_nlj_mapping
@@ -73,20 +34,20 @@ Module TD
         end if 
         ! reduced 1B transition density
         if(pko_option%AMPtype==0 .or. pko_option%AMPtype==1) then
-            if(.not. allocated(TDs%reduced_TD1B)) allocate(TDs%reduced_TD1B(gcm_space%Jmin:gcm_space%Jmax+2, 0:0, 2,&                         ! Jf,Kf,Pf
+            if(.not. allocated(TDs%reduced_TDME1B)) allocate(TDs%reduced_TDME1B(gcm_space%Jmin:gcm_space%Jmax+2, 0:0, 2,&                         ! Jf,Kf,Pf
                                                                             0:2*gcm_space%Jmax+2, &                                             ! lambda    
                                                                             gcm_space%Jmin:gcm_space%Jmax, 0:0, 2,&                           ! Ji,Ki,Pi
                                                                             2, TDs%nlj_length(2), TDs%nlj_length(2), 2 ),source=(0.d0,0.d0))  ! ifg,a,b,it  
-            if(.not. allocated(TDs%reduced_TD1B_c)) allocate(TDs%reduced_TD1B_c(gcm_space%Jmin:gcm_space%Jmax+2, 0:0, 2,&                         ! Jf,Kf,Pf
+            if(.not. allocated(TDs%reduced_TDME1B_c)) allocate(TDs%reduced_TDME1B_c(gcm_space%Jmin:gcm_space%Jmax+2, 0:0, 2,&                         ! Jf,Kf,Pf
                                                                                 0:2*gcm_space%Jmax+2,&                                              ! lambda
                                                                                 gcm_space%Jmin:gcm_space%Jmax, 0:0, 2,&                           ! Ji,Ki,Pi
                                                                                 2, TDs%nlj_length(2), TDs%nlj_length(2), 2 ),source=(0.d0,0.d0))  ! ifg,a,b,it
         else
-            if(.not. allocated(TDs%reduced_TD1B)) allocate(TDs%reduced_TD1B(gcm_space%Jmin:gcm_space%Jmax+2, -gcm_space%Jmax-2:gcm_space%Jmax+2, 2, &
+            if(.not. allocated(TDs%reduced_TDME1B)) allocate(TDs%reduced_TDME1B(gcm_space%Jmin:gcm_space%Jmax+2, -gcm_space%Jmax-2:gcm_space%Jmax+2, 2, &
                                                                             0:2*gcm_space%Jmax+2, &
                                                                             gcm_space%Jmin:gcm_space%Jmax, -gcm_space%Jmax:gcm_space%Jmax, 2, &
                                                                             2, TDs%nlj_length(2), TDs%nlj_length(2), 2 ),source=(0.d0,0.d0))
-            if(.not. allocated(TDs%reduced_TD1B_c)) allocate(TDs%reduced_TD1B_c(gcm_space%Jmin:gcm_space%Jmax+2, -gcm_space%Jmax-2:gcm_space%Jmax+2, 2, &
+            if(.not. allocated(TDs%reduced_TDME1B_c)) allocate(TDs%reduced_TDME1B_c(gcm_space%Jmin:gcm_space%Jmax+2, -gcm_space%Jmax-2:gcm_space%Jmax+2, 2, &
                                                                             0:2*gcm_space%Jmax+2, &
                                                                             gcm_space%Jmin:gcm_space%Jmax, -gcm_space%Jmax:gcm_space%Jmax, 2, &
                                                                             2, TDs%nlj_length(2), TDs%nlj_length(2), 2 ),source=(0.d0,0.d0))
@@ -114,18 +75,18 @@ Module TD
                                         iPi = (3-Parity_i)/2 ! +1: 1, -1: 2
                                         do iPf = 1,2
                                             Parity_f = (-1)**(iPf+1) ! 1: +1 , 2: -1
-                                            call calculate_reduced_one_body_transition_density_matrix_element(Jf,Kf,Parity_f,lambda,Ji,Ki,Parity_i,ifg,a,b,reduced_TD1B,reduced_TD1B_c,q2_q1_Symmetry)
+                                            call calculate_reduced_one_body_transition_density_matrix_element(Jf,Kf,Parity_f,lambda,Ji,Ki,Parity_i,ifg,a,b,reduced_TDME1B,reduced_TDME1B_c,q2_q1_Symmetry)
                                             ! q1-q2
                                             ! neutron
-                                            TDs%reduced_TD1B(Jf,Kf,iPf,lambda,Ji,Ki,iPi,ifg,a,b,1) =  Real(reduced_TD1B(1))
-                                            ! protron
-                                            TDs%reduced_TD1B(Jf,Kf,iPf,lambda,Ji,Ki,iPi,ifg,a,b,2) =  Real(reduced_TD1B(2))
+                                            TDs%reduced_TDME1B(Jf,Kf,iPf,lambda,Ji,Ki,iPi,ifg,a,b,1) =  Real(reduced_TDME1B(1))
+                                            ! proton
+                                            TDs%reduced_TDME1B(Jf,Kf,iPf,lambda,Ji,Ki,iPi,ifg,a,b,2) =  Real(reduced_TDME1B(2))
                                             if(q2_q1_Symmetry) then 
                                                 ! q2-q1
                                                 ! neutron
-                                                TDs%reduced_TD1B_c(Jf,Kf,iPf,lambda,Ji,Ki,iPi,ifg,a,b,1) =  Real(reduced_TD1B_c(1))
-                                                ! protron
-                                                TDs%reduced_TD1B_c(Jf,Kf,iPf,lambda,Ji,Ki,iPi,ifg,a,b,2) =  Real(reduced_TD1B_c(2))
+                                                TDs%reduced_TDME1B_c(Jf,Kf,iPf,lambda,Ji,Ki,iPi,ifg,a,b,1) =  Real(reduced_TDME1B_c(1))
+                                                ! proton
+                                                TDs%reduced_TDME1B_c(Jf,Kf,iPf,lambda,Ji,Ki,iPi,ifg,a,b,2) =  Real(reduced_TDME1B_c(2))
                                             end if
                                         end do 
                                     end do 
@@ -186,7 +147,7 @@ Module TD
         end do 
     end subroutine
     
-    subroutine calculate_reduced_one_body_transition_density_matrix_element(Jf,Kf,Parity_f,lambda,Ji,Ki,Parity_i,ifg,a,b,reduced_TD1B,reduced_TD1B_c,q2_q1_Symmetry)
+    subroutine calculate_reduced_one_body_transition_density_matrix_element(Jf,Kf,Parity_f,lambda,Ji,Ki,Parity_i,ifg,a,b,reduced_TDME1B,reduced_TDME1B_c,q2_q1_Symmetry)
         !-----------------------------------------------------------------------------------------------------------------------------
         !
         !   calculate reduced 1 body transition density
@@ -202,20 +163,20 @@ Module TD
         !           <Jf Kf Parity_f qi|| M_lambda || Ji Ki Parity_i qf>
         ! -----------------------------------------------
         !  Note: 
-        !  1)Using axial symmetry, we do not calculate the mixed densities ( TDs%rho_mm  or TDs%prho_mm) for beta in [pi/2, pi] .
+        !  1)Using axial symmetry, we do not calculate the mixed densities ( Proj_densities%rho_mm  or Proj_densities%prho_mm) for beta in [pi/2, pi] .
         !   However, it can be shown that the contribution from [pi/2, pi ] is the same as that from ([0, pi/2]),
         !   differing only by a factor of Parity_i*(-1)^{J_i}. 
         !   Here we take Parity_i = (-1)^{J_i}), so we can simply multiply by 2 without integrating over [pi/2, pi ].
         !------------------------------------------------------------------------------------------------------------------------------
         use Constants, only: pi
-        use Globals, only: BS,projection_mesh,pko_option,nucleus_attributes,mix
+        use Globals, only: BS,projection_mesh,pko_option,nucleus_attributes,mix,Proj_densities
         use Basis, only: djmk
         use EM, only: wigner3j
         integer, intent(in) :: Jf,Ji,lambda,Kf,Ki,ifg,a,b,Parity_f,Parity_i
-        complex(r64),intent(out) :: reduced_TD1B(2),reduced_TD1B_c(2)
+        complex(r64),intent(out) :: reduced_TDME1B(2),reduced_TDME1B_c(2)
         integer :: i0sp,a_index,nra,nla,nja,b_index,nrb,nlb,njb,mu,K1,ialpha,ibeta,igamma,L_n,L_p,phi_n_index,phi_p_index,m1,m2,nma,nmb,it,nu,fac_Parity
         real(r64) :: alpha,beta,gamma,w,phi_n,phi_p
-        complex(r64) :: calpha,cgamma,cpi,fac1,fac2,fac_AMP,emiNphi,emiZphi,fac_PNP,fac,norm,pnorm,cfac1,cfac_AMP,local_reduced_TD1B(2), local_reduced_TD1B_c(2)
+        complex(r64) :: calpha,cgamma,cpi,fac1,fac2,fac_AMP,emiNphi,emiZphi,fac_PNP,fac,norm,pnorm,cfac1,cfac_AMP,local_reduced_TDME1B(2), local_reduced_TDME1B_c(2)
         logical :: q2_q1_Symmetry
         i0sp = BS%HO_sph%iasp(1,ifg)
         a_index = TDs%nlj_index(a,ifg)
@@ -226,8 +187,8 @@ Module TD
         nrb= BS%HO_sph%nljm(i0sp+b_index,1) ! n_r
         nlb= BS%HO_sph%nljm(i0sp+b_index,2) ! l
         njb= BS%HO_sph%nljm(i0sp+b_index,3) ! j +1/2
-        reduced_TD1B = (0.d0, 0.d0) 
-        reduced_TD1B_c = (0.d0, 0.d0) 
+        reduced_TDME1B = (0.d0, 0.d0) 
+        reduced_TDME1B_c = (0.d0, 0.d0) 
 
         fac_Parity = (1 + Parity_i*Parity_f*(-1)**(nla+nlb))/2 ! 0 or 1
         if (fac_Parity==0) return
@@ -235,9 +196,9 @@ Module TD
 
         !$OMP PARALLEL DEFAULT(shared) PRIVATE(mu,K1,ialpha,ibeta,igamma,alpha,beta,gamma,calpha,cgamma, &
         !$OMP w,fac1,fac2,cpi,fac_AMP,cfac1,cfac_AMP,L_n,L_p,phi_n_index,phi_p_index,phi_n,phi_p,emiNphi,emiZphi, &
-        !$OMP fac_PNP,m1,nma,m2,nmb,norm,pnorm,fac,it,nu,local_reduced_TD1B,local_reduced_TD1B_c) 
-        local_reduced_TD1B = (0.d0, 0.d0) 
-        local_reduced_TD1B_c = (0.d0, 0.d0)
+        !$OMP fac_PNP,m1,nma,m2,nmb,norm,pnorm,fac,it,nu,local_reduced_TDME1B,local_reduced_TDME1B_c) 
+        local_reduced_TDME1B = (0.d0, 0.d0) 
+        local_reduced_TDME1B_c = (0.d0, 0.d0)
         !$OMP DO COLLAPSE(4) SCHEDULE(dynamic)
         do mu = -lambda,lambda
             do ialpha = 1, projection_mesh%nalpha
@@ -282,7 +243,7 @@ Module TD
                             cpi = DCMPLX(0.d0,pi) ! i*pi
                             w = projection_mesh%walpha(ialpha)*projection_mesh%wbeta(ibeta)*projection_mesh%wgamma(igamma)
                             fac1 = (2*Ji+1)/(8.0d0*pi**2)*dsin(beta)*djmk(Ji,K1,Ki,dcos(beta),0)*CDEXP(-K1*calpha-Ki*cgamma)
-                            fac2 = 1.0d0 + (-1)**mu*CDEXP(-K1*cpi) + CDEXP(-Ki*cpi) + (-1)**mu*CDEXP(-K1*cpi-Ki*cpi)
+                            fac2 = 1.0d0 + (-1)**mu*CDEXP(-K1*cpi) + CDEXP(-Ki*cpi) + (-1)**mu*CDEXP(-K1*cpi-Ki*cpi)! D2 symmetry is required, with alpha, gamma in [0, pi].
                             fac_AMP = fac1*fac2*w
                             ! factor of qi-qf exchange
                             cfac1 = (2*Ji+1)/(8.0d0*pi**2)*dsin(beta)*djmk(Ji,Ki,K1,dcos(beta),0)*CDEXP(Ki*calpha+K1*cgamma)
@@ -301,19 +262,19 @@ Module TD
                                     nma = BS%HO_sph%nljm(i0sp+m1,4) ! m_j + 1/2  
                                     do m2 = b_index, b_index+2*njb-1
                                         nmb = BS%HO_sph%nljm(i0sp+m2,4) ! m_j + 1/2
-                                        norm = TDs%norm(phi_n_index,1,ialpha,ibeta,igamma)*TDs%norm(phi_p_index,2,ialpha,ibeta,igamma)
-                                        pnorm = TDs%pnorm(phi_n_index,1,ialpha,ibeta,igamma)*TDs%pnorm(phi_p_index,2,ialpha,ibeta,igamma)
+                                        norm = Proj_densities%norm(phi_n_index,1,ialpha,ibeta,igamma)*Proj_densities%norm(phi_p_index,2,ialpha,ibeta,igamma)
+                                        pnorm = Proj_densities%pnorm(phi_n_index,1,ialpha,ibeta,igamma)*Proj_densities%pnorm(phi_p_index,2,ialpha,ibeta,igamma)
                                         ! ----------- q1-q2 (qf-qi) ---------------- 
                                         fac = fac_AMP*fac_PNP*(2*Jf+1)*(-1)**(Jf-Kf)*wigner3j(Jf,lambda,Ji,-Kf,mu,K1,IS=0)* &
                                             (-1)**(njb-nmb)*(-1)**(lambda+mu+1)*dsqrt(2*lambda+1.d0)*wigner3j(nja,lambda,njb,nma,-mu,1-nmb,IS=1)! (-1)^{jb-mb}C^{lambda mu}_{ja ma jb -mb}
                                         ! neutron part
                                         it = 1 
-                                        local_reduced_TD1B(it) = local_reduced_TD1B(it) + fac*(norm*TDs%rho_mm(m2,m1,ifg,phi_n_index,it,ialpha,ibeta,igamma)+ &
-                                                        Parity_i*pnorm*TDs%prho_mm(m2,m1,ifg,phi_n_index,it,ialpha,ibeta,igamma))/2.0d0
+                                        local_reduced_TDME1B(it) = local_reduced_TDME1B(it) + fac*(norm*Proj_densities%rho_mm(m2,m1,ifg,phi_n_index,it,ialpha,ibeta,igamma)+ &
+                                                        Parity_i*pnorm*Proj_densities%prho_mm(m2,m1,ifg,phi_n_index,it,ialpha,ibeta,igamma))/2.0d0
                                         ! proton part
                                         it = 2
-                                        local_reduced_TD1B(it) = local_reduced_TD1B(it) + fac*(norm*TDs%rho_mm(m2,m1,ifg,phi_p_index,it,ialpha,ibeta,igamma)+ &
-                                                        Parity_i*pnorm*TDs%prho_mm(m2,m1,ifg,phi_p_index,it,ialpha,ibeta,igamma))/2.0d0  
+                                        local_reduced_TDME1B(it) = local_reduced_TDME1B(it) + fac*(norm*Proj_densities%rho_mm(m2,m1,ifg,phi_p_index,it,ialpha,ibeta,igamma)+ &
+                                                        Parity_i*pnorm*Proj_densities%prho_mm(m2,m1,ifg,phi_p_index,it,ialpha,ibeta,igamma))/2.0d0  
                                         
                                         !------------- q2-q1(qi-qf) -----------------
                                         if(q2_q1_Symmetry) then
@@ -323,12 +284,12 @@ Module TD
                                                     (-1)**(njb-nmb)*(-1)**(lambda+nu+1)*dsqrt(2*lambda+1.d0)*wigner3j(nja,lambda,njb,nma,-nu,1-nmb,IS=1)
                                                 ! neutron part
                                                 it = 1 
-                                                local_reduced_TD1B_c(it) = local_reduced_TD1B_c(it) + fac*DCONJG(fac_PNP*norm*TDs%rho_mm(m1,m2,ifg,phi_n_index,it,ialpha,ibeta,igamma)+ &
-                                                                Parity_f*fac_PNP*pnorm*TDs%prho_mm(m1,m2,ifg,phi_n_index,it,ialpha,ibeta,igamma))/2.0d0
+                                                local_reduced_TDME1B_c(it) = local_reduced_TDME1B_c(it) + fac*DCONJG(fac_PNP*norm*Proj_densities%rho_mm(m1,m2,ifg,phi_n_index,it,ialpha,ibeta,igamma)+ &
+                                                                Parity_f*fac_PNP*pnorm*Proj_densities%prho_mm(m1,m2,ifg,phi_n_index,it,ialpha,ibeta,igamma))/2.0d0
                                                 ! proton part
                                                 it = 2
-                                                local_reduced_TD1B_c(it) = local_reduced_TD1B_c(it) + fac*DCONJG(fac_PNP*norm*TDs%rho_mm(m1,m2,ifg,phi_p_index,it,ialpha,ibeta,igamma)+ &
-                                                                Parity_f*fac_PNP*pnorm*TDs%prho_mm(m1,m2,ifg,phi_p_index,it,ialpha,ibeta,igamma))/2.0d0
+                                                local_reduced_TDME1B_c(it) = local_reduced_TDME1B_c(it) + fac*DCONJG(fac_PNP*norm*Proj_densities%rho_mm(m1,m2,ifg,phi_p_index,it,ialpha,ibeta,igamma)+ &
+                                                                Parity_f*fac_PNP*pnorm*Proj_densities%prho_mm(m1,m2,ifg,phi_p_index,it,ialpha,ibeta,igamma))/2.0d0
                                             end do 
                                         end if 
                                     end do 
@@ -340,24 +301,24 @@ Module TD
             end do 
         end do       
         !$OMP CRITICAL
-        reduced_TD1B(1) = reduced_TD1B(1) + local_reduced_TD1B(1)
-        reduced_TD1B(2) = reduced_TD1B(2) + local_reduced_TD1B(2)
-        reduced_TD1B_c(1) = reduced_TD1B_c(1) + local_reduced_TD1B_c(1)
-        reduced_TD1B_c(2) = reduced_TD1B_c(2) + local_reduced_TD1B_c(2)
+        reduced_TDME1B(1) = reduced_TDME1B(1) + local_reduced_TDME1B(1)
+        reduced_TDME1B(2) = reduced_TDME1B(2) + local_reduced_TDME1B(2)
+        reduced_TDME1B_c(1) = reduced_TDME1B_c(1) + local_reduced_TDME1B_c(1)
+        reduced_TDME1B_c(2) = reduced_TDME1B_c(2) + local_reduced_TDME1B_c(2)
         !$OMP END CRITICAL
         !$OMP END PARALLEL
         
         if(pko_option%Euler_Symmetry==1 .and. pko_option%AMPtype==1) then
             ! If we have implemented the symmetry of rho_mm, No need to multiply by 2.
-            reduced_TD1B(1) = fac_Parity*reduced_TD1B(1)*2.d0
-            reduced_TD1B(2) = fac_Parity*reduced_TD1B(2)*2.d0  
-            reduced_TD1B_c(1) = fac_Parity*reduced_TD1B_c(1)*2.d0
-            reduced_TD1B_c(2) = fac_Parity*reduced_TD1B_c(2)*2.d0  
+            reduced_TDME1B(1) = fac_Parity*reduced_TDME1B(1)*2.d0
+            reduced_TDME1B(2) = fac_Parity*reduced_TDME1B(2)*2.d0  
+            reduced_TDME1B_c(1) = fac_Parity*reduced_TDME1B_c(1)*2.d0
+            reduced_TDME1B_c(2) = fac_Parity*reduced_TDME1B_c(2)*2.d0  
         else if(pko_option%Euler_Symmetry==0) then
-            reduced_TD1B(1) = fac_Parity*reduced_TD1B(1)
-            reduced_TD1B(2) = fac_Parity*reduced_TD1B(2)
-            reduced_TD1B_c(1) = fac_Parity*reduced_TD1B_c(1)
-            reduced_TD1B_c(2) = fac_Parity*reduced_TD1B_c(2)
+            reduced_TDME1B(1) = fac_Parity*reduced_TDME1B(1)
+            reduced_TDME1B(2) = fac_Parity*reduced_TDME1B(2)
+            reduced_TDME1B_c(1) = fac_Parity*reduced_TDME1B_c(1)
+            reduced_TDME1B_c(2) = fac_Parity*reduced_TDME1B_c(2)
         else 
             write(*,*) 'AMPtype=',pko_option%AMPtype==1
             write(*,*) 'Euler_Symmetry=',pko_option%Euler_Symmetry
