@@ -836,12 +836,12 @@ subroutine calculate_mixed_density_tensor_matrix_elements(iphi,phi,it)
         !--------------------------------------------------------------------------------------
         !  calculate mixed tensor matrix elements:
         !   kappa10_mm'  = <q1|c_m' c_m R|q2>/<q1|R|q2>.
-        !   kappa01_mm'* = <q1|c+_m' c+_m R|q2>/<q1|R|q2>.
+        !   kappa01_m'm* = <q1|c+_m' c+_m R|q2>/<q1|R|q2>.
         !
         !  \kappa10_mm'++  = \sqrt{f_1}\sqrt{f_2} R_mm'' (F_2)_m''q (V_2*)_ql (D^-1)_lk (U_1^T)_kp (F_1^T)_pm'
         !  \kappa10_nn'--  = \sqrt{f_1}\sqrt{f_2} R_nn'' (G_2)_n''q (V_2*)_ql (D^-1)_lk (U_1^T)_kp (G_1^T)_pn'
-        !  \kappa01_mm'++* = \sqrt{f_1}\sqrt{f_2} R*_mm'' (F_2)_m''q (U_2*)_ql (D^-1)_lk (V_1^T)_kp (F_1^T)_pm'
-        !  \kappa01_nn'--* = \sqrt{f_1}\sqrt{f_2} R*_nn'' (G_2)_n''q (U_2*)_ql (D^-1)_lk (V_1^T)_kp (G_1^T)_pn'
+        !  \kappa01_m'm++* = \sqrt{f_1}\sqrt{f_2} R*_mm'' (F_2)_m''q (U_2*)_ql (D^-1)_lk (V_1^T)_kp (F_1^T)_pm'
+        !  \kappa01_n'n--* = \sqrt{f_1}\sqrt{f_2} R*_nn'' (G_2)_n''q (U_2*)_ql (D^-1)_lk (V_1^T)_kp (G_1^T)_pn'
         !  where m and m' are the spherical harmonic basis indices of the large component,
         !        n and n' are the spherical harmonic basis indices of the small component.
         !
@@ -857,12 +857,12 @@ subroutine calculate_mixed_density_tensor_matrix_elements(iphi,phi,it)
         !         (             ... )        (             ... )
         ! Returns:
         !  * kappa10_mm(:,:,ifg,iphi,it): ifg=1: \kappa10_mm'++, ifg=2: \kappa10_nn'--
-        !  * kappa01c_mm(:,:,ifg,iphi,it): ifg=1: \kappa01_mm'++*, ifg=2: \kappa01_nn'--*
+        !  * kappa01c_mm(:,:,ifg,iphi,it): ifg=1: \kappa01_m'm++*, ifg=2: \kappa01_n'n--*
         !  * pkappa10_mm(:,:,ifg,iphi,it)
         !  * pkappa01c_mm(:,:,ifg,iphi,it)
         !--------------------------------------------------------------------------------------
         integer :: truncated_dim,dim_m_max,ifg,i0sp,ndsp,nfgsp,l,truncated_l,m1,k,truncated_k,nl1,nj1,nm1,nm1_reversed, &
-                    m1_reversed
+                    m1_reversed,m2
         complex(r64) :: vl
         real(r64) :: f_l,ul,uk,vk,f_k,nj1_half,nm1_half
         complex(r64), dimension(:,:),allocatable :: Av,pAv,Au,pAu,B10,pB10,B01,pB01,Cu,pCu,Cv,pCv,tmp
@@ -954,19 +954,29 @@ subroutine calculate_mixed_density_tensor_matrix_elements(iphi,phi,it)
                                                         *(-1)**(Int(nl1+nj1_half+nm1_half+ifg-1))
                 end do
             end do
+            ! kappa10_mm
             call cmatmul_ABC(Av(1:ndsp,1:2*truncated_dim), B10(1:2*truncated_dim,1:2*truncated_dim), Cu(1:2*truncated_dim,1:ndsp), tmp(1:ndsp,1:ndsp), &
                                 ndsp, 2*truncated_dim, 2*truncated_dim, ndsp)
             mix%kappa10_mm(:,:,ifg,iphi,it) = tmp ! ifg = 1 is kappa10^++ and ifg = 2 is kappa10^--
             call cmatmul_ABC(pAv(1:ndsp,1:2*truncated_dim), pB10(1:2*truncated_dim,1:2*truncated_dim), pCu(1:2*truncated_dim,1:ndsp), tmp(1:ndsp,1:ndsp), &
                                 ndsp, 2*truncated_dim, 2*truncated_dim, ndsp)
             mix%pkappa10_mm(:,:,ifg,iphi,it) = tmp
-
+            
+            ! kappa01c_mm
             call cmatmul_ABC(Au(1:ndsp,1:2*truncated_dim), B01(1:2*truncated_dim,1:2*truncated_dim), Cv(1:2*truncated_dim,1:ndsp), tmp(1:ndsp,1:ndsp), &
                                 ndsp, 2*truncated_dim, 2*truncated_dim, ndsp)
-            mix%kappa01c_mm(:,:,ifg,iphi,it) = tmp ! ifg = 1 is kappa01^++* and ifg = 2 is kappa01^--*
+            do m1 = 1, ndsp
+                do m2 = 1,ndsp
+                    mix%kappa01c_mm(m1,m2,ifg,iphi,it) = tmp(m2,m1) ! ifg = 1 is kappa01^++* and ifg = 2 is kappa01^--*
+                end do
+            end do
             call cmatmul_ABC(pAu(1:ndsp,1:2*truncated_dim), pB01(1:2*truncated_dim,1:2*truncated_dim), pCv(1:2*truncated_dim,1:ndsp), tmp(1:ndsp,1:ndsp), &
                                 ndsp, 2*truncated_dim, 2*truncated_dim, ndsp)
-            mix%pkappa01c_mm(:,:,ifg,iphi,it) = tmp
+            do m1 = 1, ndsp
+                do m2 = 1,ndsp
+                    mix%pkappa01c_mm(m1,m2,ifg,iphi,it) = tmp(m2,m1)
+                end do
+            end do
         end do
     end subroutine
 end subroutine
