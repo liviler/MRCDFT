@@ -60,6 +60,7 @@ type Input_Parameter
     integer :: nalpha ! number of meshpoints in Euler angles alpha
     integer :: nbeta  ! number of meshpoints in Euler angles beta
     integer :: ngamma ! number of meshpoints in Euler angles gamma
+    integer :: TDType ! 0: no 1: yes
     integer :: lambda_max ! max lambda of EM 
 end type
 type(Input_Parameter) :: input_par
@@ -546,6 +547,7 @@ type Option_PKO
     integer :: Kernel_Symmetry ! Symmetry in Kernels using: 0 no ; 1: yes ; 2: diagonal elements only
     integer :: Euler_Symmetry ! Symmetry of Euler angles (alpha, beta ,gamma ). 0: no, 1: Axially, 2: D2 
     integer :: icm ! cent-of-mass corr. 1: q-dep; 2: aver. q
+    integer :: TDType
 end type
 type(Option_PKO) :: pko_option
 

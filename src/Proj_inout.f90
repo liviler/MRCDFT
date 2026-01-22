@@ -46,6 +46,7 @@ subroutine read_Proj_configuration(ifPrint)
     read(u_pko, format2) input_par%nalpha
     read(u_pko, format2) input_par%nbeta
     read(u_pko, format2) input_par%ngamma
+    read(u_pko, format2) input_par%TDType
     read(u_pko, format2) input_par%lambda_max
     call set_pko_parameters
     if(ifPrint) call printParameters
@@ -98,6 +99,8 @@ subroutine read_Proj_configuration(ifPrint)
         if(gcm_space%q2_end < gcm_space%q2_start) stop 'q2_end less than q2_start !'
         if(gcm_space%q2_end > constraint%length) stop 'q2_end greater than max length.'
 
+        ! set TD type
+        pko_option%TDType = input_par%TDType
         ! max lambda of 1B transition density
         TDs%lambda_max = input_par%lambda_max
     end subroutine
@@ -206,9 +209,11 @@ subroutine write_pko_output(q1,q2)
     integer,intent(in) :: q1,q2
     call set_pko_output_filename(q1,q2,pko_option%AMPType)
     call write_kernels
-    call write_reduced_1B_transition_density_matrix_elements(q1,q2)
-    if(q1== gcm_space%q1_start .and. q2==gcm_space%q2_start) then 
-        call write_reduced_1B_multipole_matrix_elements
+    if (pko_option%TDType==1) then
+        call write_reduced_1B_transition_density_matrix_elements(q1,q2)
+        if(q1== gcm_space%q1_start .and. q2==gcm_space%q2_start) then 
+            call write_reduced_1B_multipole_matrix_elements
+        end if 
     end if 
 end subroutine
 
