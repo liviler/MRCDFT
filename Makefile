@@ -130,7 +130,7 @@ ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_kernel.o : ${OBJ_DIR}/Constants.o ${OBJ_DIR}/Glo
 										   ${OBJ_DIR}/${SRC_FILE_PREFIX_1}_inout.o \
 										   ${OBJ_DIR}/${SRC_FILE_PREFIX_1}_basis.o \
 										   ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_mixed.o \
-										   ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_EM.o  \
+										   ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_electromagnetic.o  \
 										   ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_Energy.o \
 										   ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_density.o
 
@@ -139,16 +139,16 @@ ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_mixed.o : ${OBJ_DIR}/Constants.o ${OBJ_DIR}/Glob
 
 ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_Energy.o : ${OBJ_DIR}/Constants.o ${OBJ_DIR}/Globals.o
 
-${OBJ_DIR}/${SRC_FILE_PREFIX_2}_EM.o : ${OBJ_DIR}/Constants.o ${OBJ_DIR}/Globals.o
+${OBJ_DIR}/${SRC_FILE_PREFIX_2}_electromagnetic.o : ${OBJ_DIR}/Constants.o ${OBJ_DIR}/Globals.o
 
 ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_density.o : ${OBJ_DIR}/Constants.o ${OBJ_DIR}/Globals.o
 
 ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_transition_density.o : ${OBJ_DIR}/Constants.o ${OBJ_DIR}/Globals.o \
 									  				   ${OBJ_DIR}/${SRC_FILE_PREFIX_1}_basis.o  \
-													   ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_EM.o
+													   ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_electromagnetic.o
 ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_inout.o : ${OBJ_DIR}/Constants.o ${OBJ_DIR}/Globals.o\
 										  ${OBJ_DIR}/${SRC_FILE_PREFIX_1}_inout.o \
-										  ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_EM.o
+										  ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_electromagnetic.o
 path:
 	@echo "src path: ${SRC_DIR}/"
 	@echo "mod path: ${MOD_DIR}/"
