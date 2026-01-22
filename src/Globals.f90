@@ -491,23 +491,23 @@ type(Force_Parameter_Sets) :: force
 
 
 type math_gfv
-    integer,dimension(-igfv:igfv) :: iv
-    real(r64),dimension(0:igfv) :: sq
-    real(r64),dimension(0:igfv) :: sqi
-    real(r64),dimension(0:igfv) :: sqh
-    real(r64),dimension(0:igfv) :: shi
-    real(r64),dimension(0:igfvbc,0:igfvbc) :: ibc
-    real(r64),dimension(0:igfv) :: fak
-    real(r64),dimension(0:igfv) :: fad
-    real(r64),dimension(0:igfv) :: fi
-    real(r64),dimension(0:igfv) :: fdi
-    real(r64),dimension(0:igfv) :: wf
-    real(r64),dimension(0:igfv) :: wfi
-    real(r64),dimension(0:igfv) :: wfd
-    real(r64),dimension(0:igfv) :: gm2
-    real(r64),dimension(0:igfv) :: gmi
-    real(r64),dimension(0:igfv) :: wg
-    real(r64),dimension(0:igfv) :: wgi
+    integer,dimension(-igfv:igfv) :: iv             ! (-1)**n
+    real(r64),dimension(0:igfv) :: sq               ! sqrt(n)
+    real(r64),dimension(0:igfv) :: sqi              ! 1/sqrt(n)
+    real(r64),dimension(0:igfv) :: sqh              ! sqrt(n+1/2)
+    real(r64),dimension(0:igfv) :: shi              ! 1/sqrt(n+1/2)
+    real(r64),dimension(0:igfvbc,0:igfvbc) :: ibc   ! m!/(n!(m-n)!)
+    real(r64),dimension(0:igfv) :: fak              ! n!
+    real(r64),dimension(0:igfv) :: fad              ! (2*n+1)!!
+    real(r64),dimension(0:igfv) :: fi               ! 1/n!
+    real(r64),dimension(0:igfv) :: fdi              ! 1/(2*n+1)!!
+    real(r64),dimension(0:igfv) :: wf               ! sqrt(n!)
+    real(r64),dimension(0:igfv) :: wfi              ! 1/sqrt(n!)
+    real(r64),dimension(0:igfv) :: wfd              ! sqrt((2*n+1)!!)
+    real(r64),dimension(0:igfv) :: gm2              ! gamma(n+1/2)
+    real(r64),dimension(0:igfv) :: gmi              ! 1/gamma(n+1/2)
+    real(r64),dimension(0:igfv) :: wg               ! sqrt(gamma(n+1/2))
+    real(r64),dimension(0:igfv) :: wgi              ! 1/sqrt(gamma(n+1/2))
 end type
 type(math_gfv) :: gfv
 
