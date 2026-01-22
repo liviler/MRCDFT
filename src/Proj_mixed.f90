@@ -141,6 +141,12 @@ subroutine initialize_variables
     if(.not. allocated(mix%pkappa_mm)) allocate(mix%pkappa_mm(dim_m_max,dim_m_max,2,nphi_max,itx))
     if(.not. allocated(mix%kappac_mm)) allocate(mix%kappac_mm(dim_m_max,dim_m_max,2,nphi_max,itx))  ! 2: \kappa^++,\kappa^--; itx: nutron, proton
     if(.not. allocated(mix%pkappac_mm)) allocate(mix%pkappac_mm(dim_m_max,dim_m_max,2,nphi_max,itx))
+
+    if(.not. allocated(mix%kappa10_mm)) allocate(mix%kappa10_mm(dim_m_max,dim_m_max,2,nphi_max,itx))  ! 2: \kappa10^++,\kappa10^--; itx: nutron, proton  
+    if(.not. allocated(mix%pkappa10_mm)) allocate(mix%pkappa10_mm(dim_m_max,dim_m_max,2,nphi_max,itx))
+    if(.not. allocated(mix%kappa01c_mm)) allocate(mix%kappa01c_mm(dim_m_max,dim_m_max,2,nphi_max,itx))  ! 2: \kappa01*^++,\kappa01*^--; itx: nutron, proton
+    if(.not. allocated(mix%pkappa01c_mm)) allocate(mix%pkappa01c_mm(dim_m_max,dim_m_max,2,nphi_max,itx))
+
     ! rho_S_it(alpha,beta,gamma,phi,it) with fixed alpha, beta,gamma
     if(.not. allocated(mix%rho_S_it)) allocate(mix%rho_S_it(ngr*ntheta*nphi,nphi_max,itx)) ! ((x,theta,phi),phi_it,it)
     if(.not. allocated(mix%rho_V_it)) allocate(mix%rho_V_it(ngr*ntheta*nphi,nphi_max,itx))
@@ -516,6 +522,7 @@ subroutine calculate_mixed_density_tensor_matrix_elements(iphi,phi,it)
     ei2phi = cdexp(2*cphi)
     call mixed_density_matrix_elments
     call mixed_tensor_matrix_elements
+    call mixed_kappa_matrix_elements
     contains
     subroutine mixed_density_matrix_elments
         !--------------------------------------------------------------------------------------
