@@ -369,6 +369,8 @@ type Output_FileName
     character(len=40) :: config = OUTPUT_PATH//'config.out'
     integer :: u_config   = u_config
     character(len=20) :: format_title = '(/,">> ","[", A,"]")' 
+
+    ! --------------- CDFT ---------------------
     ! standard output
     character(len=40) :: outputf
     integer :: u_outputf  = u_config + 1
@@ -384,23 +386,29 @@ type Output_FileName
     ! density
     character(len=40) :: outputd
     integer :: u_outputd = u_config + 5
-    ! kernel
-    character(len=60) :: outputelem
-    integer :: u_outputelem = u_config + 6
-    ! TD1B
-    character(len=60) :: outputTDME1B ! q1-q2
-    integer :: u_outputTDME1B = u_config + 7
-    character(len=60) :: outputTDME1B_c ! q2-q1
-    integer :: u_outputTDME1B_c = u_config + 8
-    ! MEelem
-    character(len=60) :: outputEMelem
-    integer :: u_outputEMelem = u_config + 9
     ! rotational correction energy
     character(len=40) :: rotationalE = OUTPUT_PATH//'CDFT_Erot.out'
-    integer :: u_rotationalE = u_config + 11
-    !
+    integer :: u_rotationalE = u_config + 6
+    ! 
     character(len=40) :: outExpectation = OUTPUT_PATH//'CDFT_Expectation.out'
-    integer :: u_outExpectation = u_config + 12
+    integer :: u_outExpectation = u_config + 7
+
+    ! --------------- Projection ---------------------
+    ! kernel
+    character(len=60) :: outputelem
+    integer :: u_outputelem = u_config + 11
+    ! TD1B
+    character(len=60) :: outputTDME1B ! q1-q2
+    integer :: u_outputTDME1B = u_config + 12
+    character(len=60) :: outputTDME1B_c ! q2-q1
+    integer :: u_outputTDME1B_c = u_config + 13
+    ! MEelem
+    character(len=60) :: outputEMelem
+    integer :: u_outputEMelem = u_config + 14
+    ! Eccentricity 
+    character(len=60) :: outputEccentricityelem
+    integer :: u_outputEccentricityelem = u_config + 15
+
 
 end type
 type(Output_FileName) :: outputfile

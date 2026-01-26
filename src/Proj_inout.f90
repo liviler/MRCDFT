@@ -215,6 +215,7 @@ subroutine write_pko_output(q1,q2)
             call write_reduced_1B_multipole_matrix_elements
         end if 
     end if 
+    call write_eccentricity_operators_matrix_elements_1B
 end subroutine
 
 subroutine set_pko_output_filename(q1,q2,AMPType)
@@ -293,6 +294,8 @@ subroutine set_pko_output_filename(q1,q2,AMPType)
                         //signb31//char(name1(4))//char(name1(5))//char(name1(6)) //'.dens'
     outputfile%outputEMelem = OUTPUT_PATH//'EM'//'_A'//int2str(A) &
                         //'_eMax'//char(name_nf1)//char(name_nf2)//'.elem'       
+    outputfile%outputEccentricityelem = OUTPUT_PATH//'Eccentricity'//'_A'//int2str(A) &
+                        //'_eMax'//char(name_nf1)//char(name_nf2)//'.elem'
 end subroutine
 
 subroutine write_kernels
@@ -450,4 +453,32 @@ subroutine  write_reduced_1B_multipole_matrix_elements
     end do
 end subroutine
 
+subroutine write_eccentricity_operators_matrix_elements_1B
+    use Globals, only: BS, outputfile
+    use Eccentricity, only: f_n,eccentricity_matrix_element_one_body
+    integer :: ifg,ndsp,i0sp,m1,m2,nr1,nl1,nj1,nm1,nr2,nl2,nj2,nm2
+    real(r64) :: fn, e_1B
+    open(outputfile%u_outputEccentricityelem ,form='formatted',file=outputfile%outputEccentricityelem)
+    write(outputfile%u_outputEccentricityelem,*) "  ifg   n1   n2   l1   l2  2j1  2j2  2m1  2m2      f2     Eps1B" 
+    do ifg = 1, 2
+        ndsp = BS%HO_sph%idsp(1,ifg)
+        i0sp = BS%HO_sph%iasp(1,ifg)
+        do m1 = 1, ndsp
+            do m2= 1, ndsp
+                nr1 = BS%HO_sph%nljm(i0sp+m1,1)
+                nl1 = BS%HO_sph%nljm(i0sp+m1,2)
+                nj1 = BS%HO_sph%nljm(i0sp+m1,3)
+                nm1 = BS%HO_sph%nljm(i0sp+m1,4)
+        
+                nr2 = BS%HO_sph%nljm(i0sp+m2,1)
+                nl2 = BS%HO_sph%nljm(i0sp+m2,2)
+                nj2 = BS%HO_sph%nljm(i0sp+m2,3)
+                nm2 = BS%HO_sph%nljm(i0sp+m2,4)
+                fn = f_n(nr1,nl1,nj1,nm1,nr2,nl2,nj2,nm2,2)
+                call eccentricity_matrix_element_one_body(ifg,m1,m2,2,e_1B)
+                write(outputfile%u_outputEccentricityelem,"(9i5,1x,2f10.5)") ifg,nr1,nr2,nl1,nl2,2*nj1-1,2*nj2-1,2*nm1-1,2*nm2-1,fn,e_1B
+            end do 
+        end do 
+    end do
+end subroutine
 END MODULE Proj_Inout

@@ -146,6 +146,9 @@ ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_density.o : ${OBJ_DIR}/Constants.o ${OBJ_DIR}/Gl
 ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_transition_density.o : ${OBJ_DIR}/Constants.o ${OBJ_DIR}/Globals.o \
 									  				   ${OBJ_DIR}/${SRC_FILE_PREFIX_1}_basis.o  \
 													   ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_electromagnetic.o
+${OBJ_DIR}/${SRC_FILE_PREFIX_2}_eccentricity.o : ${OBJ_DIR}/Constants.o ${OBJ_DIR}/Globals.o \
+													   ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_electromagnetic.o
+
 ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_inout.o : ${OBJ_DIR}/Constants.o ${OBJ_DIR}/Globals.o\
 										  ${OBJ_DIR}/${SRC_FILE_PREFIX_1}_inout.o \
 										  ${OBJ_DIR}/${SRC_FILE_PREFIX_2}_electromagnetic.o
