@@ -8,7 +8,7 @@ Module TD
     use Globals, only: TDs
     implicit none
     contains
-    subroutine calcualte_reduced_transition_density_matrix_element(q1,q2)
+    subroutine calculate_reduced_transition_density_matrix_element(q1,q2)
         !-----------------------------------------------------------------
         !
         !   calculate and store the reduced transition denstiy
@@ -25,7 +25,7 @@ Module TD
         integer :: J,Ji,Jf,lambda,Ki_start,Ki_end,Kf_start,Kf_end,Kf,Ki,ifg,a,b,Parity_i,Parity_f,iPi,iPf
         complex(r64) :: reduced_TDME1B(2),reduced_TDME1B_c(2)
         logical :: q2_q1_Symmetry
-        write(*,'(5x,A)') 'calcualte_reduced_transition_density_matrix_element ...'
+        write(*,'(5x,A)') 'calculate_reduced_transition_density_matrix_element ...'
         call set_nlj_mapping
         if(q1/=q2 .and. pko_option%Kernel_Symmetry==1) then
             q2_q1_Symmetry = .True.
@@ -320,7 +320,7 @@ Module TD
             reduced_TDME1B_c(1) = fac_Parity*reduced_TDME1B_c(1)
             reduced_TDME1B_c(2) = fac_Parity*reduced_TDME1B_c(2)
         else 
-            write(*,*) 'AMPtype=',pko_option%AMPtype==1
+            write(*,*) 'AMPtype=',pko_option%AMPtype
             write(*,*) 'Euler_Symmetry=',pko_option%Euler_Symmetry
             stop "Wrong AMPtype or Euler_Symmetry ! "
         end if 

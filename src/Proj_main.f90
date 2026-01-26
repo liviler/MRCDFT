@@ -16,8 +16,8 @@ contains
         use Proj_Inout, only: read_wavefuntion_files,write_pko_output
         use Mixed, only: determine_truncated_dimension
         use Kernel, only: set_projection_mesh_points,calculate_Kernel
-        use Proj_Density, only: calcualte_density_matrix_element
-        use TD, only: calcualte_reduced_transition_density_matrix_element
+        use Proj_Density, only: calculate_density_matrix_element
+        use TD, only: calculate_reduced_transition_density_matrix_element
         implicit none
         integer :: q1,q2_start,q2_end,q2
 
@@ -43,9 +43,9 @@ contains
                 call read_wavefuntion_files(q1,q2)
                 call determine_truncated_dimension
                 call calculate_Kernel
-                call calcualte_density_matrix_element(q1,q2)
+                call calculate_density_matrix_element(q1,q2)
                 if (pko_option%TDType == 1) then
-                    call calcualte_reduced_transition_density_matrix_element(q1,q2)
+                    call calculate_reduced_transition_density_matrix_element(q1,q2)
                 end if 
                 call write_pko_output(q1,q2)
             end do
