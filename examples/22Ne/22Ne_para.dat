@@ -40,4 +40,5 @@ EulerSym =  1                       ! Symmetry of Euler angles (alpha, beta ,gam
 nalpha   =  1                       ! number of meshpoints in Euler angles alpha (even numbers) 
 nbeta    =  12                      ! number of meshpoints in Euler angles beta (even numbers) 
 ngamma   =  1                       ! number of meshpoints in Euler angles gamma (even numbers) 
+TDType   =  0                       ! calculate reduced transition density : (0) no (1) yes
 lambda   =  3                       ! max lambda of 1B transition density
