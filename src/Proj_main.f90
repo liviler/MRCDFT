@@ -43,7 +43,9 @@ contains
                 call read_wavefuntion_files(q1,q2)
                 call determine_truncated_dimension
                 call calculate_Kernel
-                call calculate_density_matrix_element(q1,q2)
+                if (pko_option%DsType == 1) then
+                    call calculate_density_matrix_element(q1,q2)
+                end if 
                 if (pko_option%TDType == 1) then
                     call calculate_reduced_transition_density_matrix_element(q1,q2)
                 end if 
