@@ -21,12 +21,12 @@ contains
         ngamma = projection_mesh%ngamma
         if(.not. allocated(Proj_densities%norm)) allocate(Proj_densities%norm(nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0))
         if(.not. allocated(Proj_densities%pnorm)) allocate(Proj_densities%pnorm(nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0))
-        if(.not. allocated(Proj_densities%rho_mm)) allocate(Proj_densities%rho_mm(dim_m_max,dim_m_max,2,nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0)) !(m,m',++/--,phi_it,it,alpha,beta,gamma)
-        if(.not. allocated(Proj_densities%prho_mm)) allocate(Proj_densities%prho_mm(dim_m_max,dim_m_max,2,nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0))
-        if(.not. allocated(Proj_densities%kappa01c_mm)) allocate(Proj_densities%kappa01c_mm(dim_m_max,dim_m_max,2,nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0))
-        if(.not. allocated(Proj_densities%pkappa01c_mm)) allocate(Proj_densities%pkappa01c_mm(dim_m_max,dim_m_max,2,nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0))
-        if(.not. allocated(Proj_densities%kappa10_mm)) allocate(Proj_densities%kappa10_mm(dim_m_max,dim_m_max,2,nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0))
-        if(.not. allocated(Proj_densities%pkappa10_mm)) allocate(Proj_densities%pkappa10_mm(dim_m_max,dim_m_max,2,nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0))
+        if(.not. allocated(Proj_densities%rho_mm)) allocate(Proj_densities%rho_mm(dim_m_max,dim_m_max,4,nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0)) !(m,m',++/--,phi_it,it,alpha,beta,gamma)
+        if(.not. allocated(Proj_densities%prho_mm)) allocate(Proj_densities%prho_mm(dim_m_max,dim_m_max,4,nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0))
+        if(.not. allocated(Proj_densities%kappa01c_mm)) allocate(Proj_densities%kappa01c_mm(dim_m_max,dim_m_max,4,nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0))
+        if(.not. allocated(Proj_densities%pkappa01c_mm)) allocate(Proj_densities%pkappa01c_mm(dim_m_max,dim_m_max,4,nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0))
+        if(.not. allocated(Proj_densities%kappa10_mm)) allocate(Proj_densities%kappa10_mm(dim_m_max,dim_m_max,4,nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0))
+        if(.not. allocated(Proj_densities%pkappa10_mm)) allocate(Proj_densities%pkappa10_mm(dim_m_max,dim_m_max,4,nphi_max,itx,nalpha,nbeta,ngamma),source=(0.d0,0.d0))
 
         ! we have to implement the symmetry of rho_mm
         if(pko_option%Euler_Symmetry>=1 .and. ialpha > (nalpha+1)/2 ) then
@@ -45,23 +45,26 @@ contains
 
         Proj_densities%norm(:,:,ialpha,ibeta,igamma) = mix%norm(:,:)
         Proj_densities%pnorm(:,:,ialpha,ibeta,igamma) = mix%pnorm(:,:)
-        Proj_densities%rho_mm(:,:,1:2,:,:,ialpha,ibeta,igamma) = mix%rho_mm(:,:,1:2,:,:)
-        Proj_densities%prho_mm(:,:,1:2,:,:,ialpha,ibeta,igamma) = mix%prho_mm(:,:,1:2,:,:)
-        Proj_densities%kappa01c_mm(:,:,1:2,:,:,ialpha,ibeta,igamma) = mix%kappa01c_mm(:,:,1:2,:,:)
-        Proj_densities%pkappa01c_mm(:,:,1:2,:,:,ialpha,ibeta,igamma) = mix%pkappa01c_mm(:,:,1:2,:,:)
-        Proj_densities%kappa10_mm(:,:,1:2,:,:,ialpha,ibeta,igamma) = mix%kappa10_mm(:,:,1:2,:,:)
-        Proj_densities%pkappa10_mm(:,:,1:2,:,:,ialpha,ibeta,igamma) = mix%pkappa10_mm(:,:,1:2,:,:)
+        Proj_densities%rho_mm(:,:,1:4,:,:,ialpha,ibeta,igamma) = mix%rho_mm(:,:,1:4,:,:)
+        Proj_densities%prho_mm(:,:,1:4,:,:,ialpha,ibeta,igamma) = mix%prho_mm(:,:,1:4,:,:)
+        Proj_densities%kappa01c_mm(:,:,1:4,:,:,ialpha,ibeta,igamma) = mix%kappa01c_mm(:,:,1:4,:,:)
+        Proj_densities%pkappa01c_mm(:,:,1:4,:,:,ialpha,ibeta,igamma) = mix%pkappa01c_mm(:,:,1:4,:,:)
+        Proj_densities%kappa10_mm(:,:,1:4,:,:,ialpha,ibeta,igamma) = mix%kappa10_mm(:,:,1:4,:,:)
+        Proj_densities%pkappa10_mm(:,:,1:4,:,:,ialpha,ibeta,igamma) = mix%pkappa10_mm(:,:,1:4,:,:)
     end subroutine
 
     subroutine calculate_density_matrix_element(q1,q2)
         !-----------------------------------------------------------------
         !
         !   calculate and store the denstiy matrix elements
-        ! 
+        !
+        !  Note:
+        !      Due to the extremely large memory usage, the two-body density
+        !      is not stored in Proj_densities%ME2B.
         !-----------------------------------------------------------------
         use Globals, only: gcm_space,pko_option,BS,kernels
         integer, intent(in) :: q1,q2
-        integer :: dim_m_max,J,K1_start,K1_end,K2_start,K2_end,K1,K2,iParity,Parity,ifg,m1,m2,m3,m4
+        integer :: dim_m_max,J,K1_start,K1_end,K2_start,K2_end,K1,K2,iParity,Parity,ifg1,m1,ifg2,m2,ifg3,m3,ifg4,m4
         complex(r64) :: ME1B(2),ME2B(2)
         complex(r64) :: N(2), N2(2)
         ! logical :: q2_q1_Symmetry
@@ -103,37 +106,48 @@ contains
                         if( Parity /= (-1)**J) cycle
                         N = 0.d0
                         N2 = 0.d0 
-                        do ifg = 1, 2 ! (++, --)
-                            do m1 = 1, BS%HO_sph%idsp(1,ifg)
-                                do m2 = 1, BS%HO_sph%idsp(1,ifg)
-                                    call calculate_one_body_density_matrix_element(J,K1,K2,Parity,ifg,m1,m2,ME1B)
+                        do ifg1 = 1, 2
+                        do m1 = 1, BS%HO_sph%idsp(1,ifg1)
+                            do ifg2 = 1, 2
+                            do m2 = 1, BS%HO_sph%idsp(1,ifg2)
+                                ! 1 Body
+                                if(ifg1==ifg2) then
+                                    call calculate_one_body_density_matrix_element(J,K1,K2,Parity,ifg1,m1,ifg2,m2,ME1B)
                                     ! neutron
-                                    Proj_densities%ME1B(J,K1,K2,iParity,1,ifg,m1,m2) = Real(ME1B(1))
+                                    Proj_densities%ME1B(J,K1,K2,iParity,1,ifg1,m1,m2) = Real(ME1B(1))
                                     ! proton
-                                    Proj_densities%ME1B(J,K1,K2,iParity,2,ifg,m1,m2) = Real(ME1B(2))
+                                    Proj_densities%ME1B(J,K1,K2,iParity,2,ifg1,m1,m2) = Real(ME1B(2))
                                     ! check particle number
-                                    if (m1==m2) then
-                                        N(1) = N(1) + Proj_densities%ME1B(J,K1,K2,iParity,1,ifg,m1,m2)
-                                        N(2) = N(2) + Proj_densities%ME1B(J,K1,K2,iParity,2,ifg,m1,m2)
-                                    end if 
-                                    do m3 = 1, BS%HO_sph%idsp(1,ifg)
-                                        do m4 = 1, BS%HO_sph%idsp(1,ifg)
-                                            if ( .not. (m1==m4 .and. m2==m3))  cycle
-                                            ! if (.not. (m1==m2 .and. m3==1 .and. m4==1)) cycle
-                                            call calculate_two_body_density_matrix_element(J,K1,K2,Parity,ifg,m1,m2,m3,m4,ME2B)
-                                            ! ! neutron
-                                            ! Proj_densities%ME2B(J,K1,K2,iParity,1,ifg,m1,m2,m3,m4) = Real(ME2B(1))
-                                            ! ! proton
-                                            ! Proj_densities%ME2B(J,K1,K2,iParity,2,ifg,m1,m2,m3,m4) = Real(ME2B(2))
-                                            ! check particle number
-                                            if (m1==m4 .and. m2==m3)  then
-                                                N2(1) = N2(1) + ME2B(1)
-                                                N2(2) = N2(2) + ME2B(2)
-                                            end if 
-                                        end do 
+                                    if (ifg1==ifg2 .and. m1==m2) then
+                                        N(1) = N(1) + Proj_densities%ME1B(J,K1,K2,iParity,1,ifg1,m1,m2)
+                                        N(2) = N(2) + Proj_densities%ME1B(J,K1,K2,iParity,2,ifg1,m1,m2)
+                                    end if
+                                end if
+
+                                do ifg3 = 1, 2
+                                do m3 = 1, BS%HO_sph%idsp(1,ifg3)
+                                    do ifg4 = 1, 2
+                                    do m4 = 1, BS%HO_sph%idsp(1,ifg4)
+                                        ! 2 Body
+                                        ! call calculate_two_body_density_matrix_element(J,K1,K2,Parity,ifg1,m1,ifg2,m2,ifg3,m3,ifg4,m4,ME2B)
+                                        ! ! neutron
+                                        ! Proj_densities%ME2B(J,K1,K2,iParity,1,ifg1,m1,m2,m3,m4) = Real(ME2B(1))
+                                        ! ! proton
+                                        ! Proj_densities%ME2B(J,K1,K2,iParity,2,ifg1,m1,m2,m3,m4) = Real(ME2B(2))
+                                        ! check particle number
+                                        if ( .not. (ifg1==ifg3 .and. m1==m3 .and. ifg2==ifg4 .and. m2==m4))  cycle
+                                        if ((ifg1==ifg3 .and. m1==m3) .and. (ifg2==ifg4 .and. m2==m4))  then
+                                            call calculate_two_body_density_matrix_element(J,K1,K2,Parity,ifg1,m1,ifg2,m2,ifg3,m3,ifg4,m4,ME2B)
+                                            N2(1) = N2(1) + ME2B(1)
+                                            N2(2) = N2(2) + ME2B(2)
+                                        end if 
                                     end do 
+                                    end do
                                 end do
-                            end do 
+                                end do 
+                            end do
+                            end do
+                        end do 
                         end do
                         write(*,*) "J=",J,"K=",K1,"K'=",K2,'Parity',Parity,'    N     =',Real(N(1)/kernels%N_KK(J,K1,K2,iParity))
                         write(*,*) "J=",J,"K=",K1,"K'=",K2,'Parity',Parity,'    Z     =',Real(N(2)/kernels%N_KK(J,K1,K2,iParity))
@@ -145,7 +159,7 @@ contains
         end do
     end subroutine
 
-    subroutine calculate_one_body_density_matrix_element(J,K1,K2,Parity,ifg,m1,m2,ME1B)
+    subroutine calculate_one_body_density_matrix_element(J,K1,K2,Parity,ifg1,m1,ifg2,m2,ME1B)
         !--------------------------------------------------------------------------------------------------
         !
         !   calculate reduced 1 body density matrix element
@@ -155,7 +169,7 @@ contains
         use Constants, only: pi
         use Globals, only: projection_mesh,pko_option,nucleus_attributes
         use Basis, only: djmk
-        integer,intent(in) :: J,K1,K2,Parity,ifg,m1,m2
+        integer,intent(in) :: J,K1,K2,Parity,ifg1,m1,ifg2,m2
         complex(r64), intent(out) :: ME1B(2)
         integer :: ialpha,ibeta,igamma,L_n,L_p,phi_n_index,phi_p_index,it
         real(r64) :: alpha,beta,gamma,w,phi_n,phi_p
@@ -212,12 +226,12 @@ contains
                             pnorm = Proj_densities%pnorm(phi_n_index,1,ialpha,ibeta,igamma)*Proj_densities%pnorm(phi_p_index,2,ialpha,ibeta,igamma)
                             ! neutron part
                             it = 1 
-                            local_ME1B(it) = local_ME1B(it) + fac_AMP*fac_PNP*(norm*Proj_densities%rho_mm(m1,m2,ifg,phi_n_index,it,ialpha,ibeta,igamma)+ &
-                                                    Parity*pnorm*Proj_densities%prho_mm(m1,m2,ifg,phi_n_index,it,ialpha,ibeta,igamma))/2.0d0
+                            local_ME1B(it) = local_ME1B(it) + fac_AMP*fac_PNP*(norm*Proj_densities%rho_mm(m1,m2,indexfg(ifg1,ifg2),phi_n_index,it,ialpha,ibeta,igamma)+ &
+                                                    Parity*pnorm*Proj_densities%prho_mm(m1,m2,indexfg(ifg1,ifg2),phi_n_index,it,ialpha,ibeta,igamma))/2.0d0
                             ! proton part
                             it = 2
-                            local_ME1B(it) = local_ME1B(it) + fac_AMP*fac_PNP*(norm*Proj_densities%rho_mm(m1,m2,ifg,phi_p_index,it,ialpha,ibeta,igamma)+ &
-                                                    Parity*pnorm*Proj_densities%prho_mm(m1,m2,ifg,phi_p_index,it,ialpha,ibeta,igamma))/2.0d0
+                            local_ME1B(it) = local_ME1B(it) + fac_AMP*fac_PNP*(norm*Proj_densities%rho_mm(m1,m2,indexfg(ifg1,ifg2),phi_p_index,it,ialpha,ibeta,igamma)+ &
+                                                    Parity*pnorm*Proj_densities%prho_mm(m1,m2,indexfg(ifg1,ifg2),phi_p_index,it,ialpha,ibeta,igamma))/2.0d0
                         end do
                     end do
                 end do
@@ -242,7 +256,7 @@ contains
         end if 
     end subroutine
 
-    subroutine calculate_two_body_density_matrix_element(J,K1,K2,Parity,ifg,m1,m2,m3,m4,ME2B)
+    subroutine calculate_two_body_density_matrix_element(J,K1,K2,Parity,ifg1,m1,ifg2,m2,ifg3,m3,ifg4,m4,ME2B)
         !---------------------------------------------------------------------------------------------------------------
         !
         !   calculate reduced 2 body density matrix element
@@ -252,7 +266,7 @@ contains
         use Constants, only: pi
         use Globals, only: projection_mesh,pko_option,nucleus_attributes
         use Basis, only: djmk
-        integer,intent(in) :: J,K1,K2,Parity,ifg,m1,m2,m3,m4
+        integer,intent(in) :: J,K1,K2,Parity,ifg1,m1,ifg2,m2,ifg3,m3,ifg4,m4
         complex(r64), intent(out) :: ME2B(2)
         integer :: ialpha,ibeta,igamma,L_n,L_p,phi_n_index,phi_p_index,it
         real(r64) :: alpha,beta,gamma,w,phi_n,phi_p
@@ -311,25 +325,25 @@ contains
                             it = 1
                             local_ME2B(it) = local_ME2B(it) + fac_AMP*fac_PNP* &
                                             (norm* &
-                                            (Proj_densities%rho_mm(m1,m4,ifg,phi_n_index,it,ialpha,ibeta,igamma)*Proj_densities%rho_mm(m2,m3,ifg,phi_n_index,it,ialpha,ibeta,igamma) &
-                                            -Proj_densities%rho_mm(m2,m4,ifg,phi_n_index,it,ialpha,ibeta,igamma)*Proj_densities%rho_mm(m1,m3,ifg,phi_n_index,it,ialpha,ibeta,igamma) &
-                                            +Proj_densities%kappa01c_mm(m4,m3,ifg,phi_n_index,it,ialpha,ibeta,igamma)*Proj_densities%kappa10_mm(m1,m2,ifg,phi_n_index,it,ialpha,ibeta,igamma)) &
+                                            (Proj_densities%rho_mm(m1,m4,indexfg(ifg1,ifg4),phi_n_index,it,ialpha,ibeta,igamma)*Proj_densities%rho_mm(m2,m3,indexfg(ifg2,ifg3),phi_n_index,it,ialpha,ibeta,igamma) &
+                                            -Proj_densities%rho_mm(m2,m4,indexfg(ifg2,ifg4),phi_n_index,it,ialpha,ibeta,igamma)*Proj_densities%rho_mm(m1,m3,indexfg(ifg1,ifg3),phi_n_index,it,ialpha,ibeta,igamma) &
+                                            +Proj_densities%kappa01c_mm(m4,m3,indexfg(ifg4,ifg3),phi_n_index,it,ialpha,ibeta,igamma)*Proj_densities%kappa10_mm(m1,m2,indexfg(ifg1,ifg2),phi_n_index,it,ialpha,ibeta,igamma)) &
                                             +Parity*pnorm* &
-                                            (Proj_densities%prho_mm(m1,m4,ifg,phi_n_index,it,ialpha,ibeta,igamma)*Proj_densities%prho_mm(m2,m3,ifg,phi_n_index,it,ialpha,ibeta,igamma) &
-                                            -Proj_densities%prho_mm(m2,m4,ifg,phi_n_index,it,ialpha,ibeta,igamma)*Proj_densities%prho_mm(m1,m3,ifg,phi_n_index,it,ialpha,ibeta,igamma) &
-                                            +Proj_densities%pkappa01c_mm(m4,m3,ifg,phi_n_index,it,ialpha,ibeta,igamma)*Proj_densities%pkappa10_mm(m1,m2,ifg,phi_n_index,it,ialpha,ibeta,igamma)) &
+                                            (Proj_densities%prho_mm(m1,m4,indexfg(ifg1,ifg4),phi_n_index,it,ialpha,ibeta,igamma)*Proj_densities%prho_mm(m2,m3,indexfg(ifg2,ifg3),phi_n_index,it,ialpha,ibeta,igamma) &
+                                            -Proj_densities%prho_mm(m2,m4,indexfg(ifg2,ifg4),phi_n_index,it,ialpha,ibeta,igamma)*Proj_densities%prho_mm(m1,m3,indexfg(ifg1,ifg3),phi_n_index,it,ialpha,ibeta,igamma) &
+                                            +Proj_densities%pkappa01c_mm(m4,m3,indexfg(ifg4,ifg3),phi_n_index,it,ialpha,ibeta,igamma)*Proj_densities%pkappa10_mm(m1,m2,indexfg(ifg1,ifg2),phi_n_index,it,ialpha,ibeta,igamma)) &
                                             )/2.0d0
                             ! proton part
                             it = 2
                             local_ME2B(it) = local_ME2B(it) + fac_AMP*fac_PNP* &
                                             (norm* &
-                                            (Proj_densities%rho_mm(m1,m4,ifg,phi_p_index,it,ialpha,ibeta,igamma)*Proj_densities%rho_mm(m2,m3,ifg,phi_p_index,it,ialpha,ibeta,igamma) &
-                                            -Proj_densities%rho_mm(m2,m4,ifg,phi_p_index,it,ialpha,ibeta,igamma)*Proj_densities%rho_mm(m1,m3,ifg,phi_p_index,it,ialpha,ibeta,igamma) &
-                                            +Proj_densities%kappa01c_mm(m4,m3,ifg,phi_p_index,it,ialpha,ibeta,igamma)*Proj_densities%kappa10_mm(m1,m2,ifg,phi_p_index,it,ialpha,ibeta,igamma)) &
+                                            (Proj_densities%rho_mm(m1,m4,indexfg(ifg1,ifg4),phi_p_index,it,ialpha,ibeta,igamma)*Proj_densities%rho_mm(m2,m3,indexfg(ifg2,ifg3),phi_p_index,it,ialpha,ibeta,igamma) &
+                                            -Proj_densities%rho_mm(m2,m4,indexfg(ifg2,ifg4),phi_p_index,it,ialpha,ibeta,igamma)*Proj_densities%rho_mm(m1,m3,indexfg(ifg1,ifg3),phi_p_index,it,ialpha,ibeta,igamma) &
+                                            +Proj_densities%kappa01c_mm(m4,m3,indexfg(ifg4,ifg3),phi_p_index,it,ialpha,ibeta,igamma)*Proj_densities%kappa10_mm(m1,m2,indexfg(ifg1,ifg2),phi_p_index,it,ialpha,ibeta,igamma)) &
                                             +Parity*pnorm* &
-                                            (Proj_densities%prho_mm(m1,m4,ifg,phi_p_index,it,ialpha,ibeta,igamma)*Proj_densities%prho_mm(m2,m3,ifg,phi_p_index,it,ialpha,ibeta,igamma) &
-                                            -Proj_densities%prho_mm(m2,m4,ifg,phi_p_index,it,ialpha,ibeta,igamma)*Proj_densities%prho_mm(m1,m3,ifg,phi_p_index,it,ialpha,ibeta,igamma) &
-                                            +Proj_densities%pkappa01c_mm(m4,m3,ifg,phi_p_index,it,ialpha,ibeta,igamma)*Proj_densities%pkappa10_mm(m1,m2,ifg,phi_p_index,it,ialpha,ibeta,igamma)) &
+                                            (Proj_densities%prho_mm(m1,m4,indexfg(ifg1,ifg4),phi_p_index,it,ialpha,ibeta,igamma)*Proj_densities%prho_mm(m2,m3,indexfg(ifg2,ifg3),phi_p_index,it,ialpha,ibeta,igamma) &
+                                            -Proj_densities%prho_mm(m2,m4,indexfg(ifg2,ifg4),phi_p_index,it,ialpha,ibeta,igamma)*Proj_densities%prho_mm(m1,m3,indexfg(ifg1,ifg3),phi_p_index,it,ialpha,ibeta,igamma) &
+                                            +Proj_densities%pkappa01c_mm(m4,m3,indexfg(ifg4,ifg3),phi_p_index,it,ialpha,ibeta,igamma)*Proj_densities%pkappa10_mm(m1,m2,indexfg(ifg1,ifg2),phi_p_index,it,ialpha,ibeta,igamma)) &
                                             )/2.0d0
                         end do
                     end do
@@ -354,4 +368,19 @@ contains
             stop "Wrong AMPtype or Euler_Symmetry ! "
         end if 
     end subroutine
+
+    integer function indexfg(ifg1,ifg2)
+        integer, intent(in) :: ifg1, ifg2
+        if(ifg1==1.and.ifg2==1) then
+            indexfg = 1 ! ++
+        else if(ifg1==2.and.ifg2==2) then
+            indexfg = 2 ! --
+        else if(ifg1==1.and.ifg2==2) then
+            indexfg = 3 ! +-
+        else if(ifg1==2.and.ifg2==1) then
+            indexfg = 4 ! -+
+        else 
+            stop 'wrong ifg1 and ifg2'
+        end if 
+    end function
 End Module Proj_Density
