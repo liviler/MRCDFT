@@ -74,23 +74,13 @@ contains
     double precision function f_n(n1,l1,j1,m1,n2,l2,j2,m2,n)
         !-------------------------------------------
         !   calculate <n1 l1 j1 m1| F_n | n1 l2 j2 m2>
-        !   where F_n = 1/c_n * r^{|n|} * Y_{|n|n}
-        !   while n > 0:  c_n = (-1)^n / (2^n n!) \sqrt((2n+1)!/(4pi))
-        !   while n < 0 : c_n = 1 / (2^n n!) \sqrt((2n+1)!/(4pi))
+        !   where F_n =  r^{|n|} * Y_{|n|n}
         !--------------------------------------------
-        use Constants, only: pi
-        use Globals, only: gfv
         use EM, only: multipole_matrix_elements
-        integer :: n1,l1,j1,m1,n2,l2,j2,m2,n
-        real(r64) :: c_n, mpme
+        integer :: n1,l1,j1,m1,n2,l2,j2,m2,n,m
+        real(r64) :: mpme
         f_n = 0.d0
-        if (n>0) then
-            c_n = (-1)**n / (2**n * gfv%fak(n)) * sqrt(gfv%fak(2*n+1)/(4*pi)) 
-        else 
-            c_n = 1.d0 / (2**n * gfv%fak(n)) * sqrt(gfv%fak(2*n+1)/(4*pi))
-        end if 
-        c_n = 1.d0
         call multipole_matrix_elements(n1,l1,j1,m1,abs(n),n,n2,l2,j2,m2,mpme)
-        f_n= 1.d0/c_n * mpme
+        f_n =  mpme
     end function
 end Module Eccentricity
