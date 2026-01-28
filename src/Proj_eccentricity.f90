@@ -77,7 +77,7 @@ contains
         !   where F_n =  r^{|n|} * Y_{|n|n}
         !--------------------------------------------
         use EM, only: multipole_matrix_elements
-        integer :: n1,l1,j1,m1,n2,l2,j2,m2,n,m
+        integer :: n1,l1,j1,m1,n2,l2,j2,m2,n
         real(r64) :: mpme
         f_n = 0.d0
         call multipole_matrix_elements(n1,l1,j1,m1,abs(n),n,n2,l2,j2,m2,mpme)
