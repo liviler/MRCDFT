@@ -34,21 +34,21 @@ Module TD
         end if 
         ! reduced 1B transition density
         if(pko_option%AMPtype==0 .or. pko_option%AMPtype==1) then
-            if(.not. allocated(TDs%reduced_TDME1B)) allocate(TDs%reduced_TDME1B(gcm_space%Jmin:gcm_space%Jmax+2, 0:0, 2,&                         ! Jf,Kf,Pf
-                                                                            0:2*gcm_space%Jmax+2, &                                             ! lambda    
+            if(.not. allocated(TDs%reduced_TDME1B)) allocate(TDs%reduced_TDME1B(gcm_space%Jmin:gcm_space%Jmax+TDs%lambda_max, 0:0, 2,&        ! Jf,Kf,Pf
+                                                                            0:TDs%lambda_max, &                                               ! lambda    
                                                                             gcm_space%Jmin:gcm_space%Jmax, 0:0, 2,&                           ! Ji,Ki,Pi
                                                                             2, TDs%nlj_length(2), TDs%nlj_length(2), 2 ),source=(0.d0,0.d0))  ! ifg,a,b,it  
-            if(.not. allocated(TDs%reduced_TDME1B_c)) allocate(TDs%reduced_TDME1B_c(gcm_space%Jmin:gcm_space%Jmax+2, 0:0, 2,&                         ! Jf,Kf,Pf
-                                                                                0:2*gcm_space%Jmax+2,&                                              ! lambda
+            if(.not. allocated(TDs%reduced_TDME1B_c)) allocate(TDs%reduced_TDME1B_c(gcm_space%Jmin:gcm_space%Jmax+TDs%lambda_max, 0:0, 2,&        ! Jf,Kf,Pf
+                                                                                0:TDs%lambda_max,&                                                ! lambda
                                                                                 gcm_space%Jmin:gcm_space%Jmax, 0:0, 2,&                           ! Ji,Ki,Pi
                                                                                 2, TDs%nlj_length(2), TDs%nlj_length(2), 2 ),source=(0.d0,0.d0))  ! ifg,a,b,it
         else
-            if(.not. allocated(TDs%reduced_TDME1B)) allocate(TDs%reduced_TDME1B(gcm_space%Jmin:gcm_space%Jmax+2, -gcm_space%Jmax-2:gcm_space%Jmax+2, 2, &
-                                                                            0:2*gcm_space%Jmax+2, &
+            if(.not. allocated(TDs%reduced_TDME1B)) allocate(TDs%reduced_TDME1B(gcm_space%Jmin:gcm_space%Jmax+TDs%lambda_max, -gcm_space%Jmax-TDs%lambda_max:gcm_space%Jmax+TDs%lambda_max, 2, &
+                                                                            0:TDs%lambda_max, &
                                                                             gcm_space%Jmin:gcm_space%Jmax, -gcm_space%Jmax:gcm_space%Jmax, 2, &
                                                                             2, TDs%nlj_length(2), TDs%nlj_length(2), 2 ),source=(0.d0,0.d0))
-            if(.not. allocated(TDs%reduced_TDME1B_c)) allocate(TDs%reduced_TDME1B_c(gcm_space%Jmin:gcm_space%Jmax+2, -gcm_space%Jmax-2:gcm_space%Jmax+2, 2, &
-                                                                            0:2*gcm_space%Jmax+2, &
+            if(.not. allocated(TDs%reduced_TDME1B_c)) allocate(TDs%reduced_TDME1B_c(gcm_space%Jmin:gcm_space%Jmax+TDs%lambda_max, -gcm_space%Jmax-TDs%lambda_max:gcm_space%Jmax+TDs%lambda_max, 2, &
+                                                                            0:TDs%lambda_max, &
                                                                             gcm_space%Jmin:gcm_space%Jmax, -gcm_space%Jmax:gcm_space%Jmax, 2, &
                                                                             2, TDs%nlj_length(2), TDs%nlj_length(2), 2 ),source=(0.d0,0.d0))
         end if 
