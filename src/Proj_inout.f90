@@ -320,8 +320,8 @@ subroutine write_kernels
                         parity = 2 ! -
                     end if
                     write(outputfile%u_outputelem,format1)  J,K1,K2,ParityChar(parity)
-                    write(outputfile%u_outputelem,format2)  kernels%N_KK(J,K1,K2,parity), kernels%H_KK(J,K1,K2,parity)/kernels%N_KK(J,K1,K2,parity)
-                    write(outputfile%u_outputelem,format2)  kernels%X_KK(J,K1,K2,1,parity)/kernels%N_KK(J,K1,K2,parity),kernels%X_KK(J,K1,K2,2,parity)/kernels%N_KK(J,K1,K2,parity)
+                    write(outputfile%u_outputelem,format2)  kernels%N_KK(J,K1,K2,parity), kernels%H_KK(J,K1,K2,parity)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)
+                    write(outputfile%u_outputelem,format2)  kernels%X_KK(J,K1,K2,1,parity)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30),kernels%X_KK(J,K1,K2,2,parity)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)
                     ! ! proton part
                     write(outputfile%u_outputelem,format2)  kernels%Q2_KK_12(J,K1,K2,2,parity),kernels%Q2_KK_21(J,K1,K2,2,parity)
                     write(outputfile%u_outputelem,format2)  kernels%E0_KK(J,K1,K2,2,parity), kernels%E0_KK(J,K1,K2,2,parity)
