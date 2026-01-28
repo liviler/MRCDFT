@@ -142,10 +142,10 @@ subroutine initialize_variables
     if(.not. allocated(mix%kappac_mm)) allocate(mix%kappac_mm(dim_m_max,dim_m_max,2,nphi_max,itx))  ! 2: \kappa^++,\kappa^--; itx: nutron, proton
     if(.not. allocated(mix%pkappac_mm)) allocate(mix%pkappac_mm(dim_m_max,dim_m_max,2,nphi_max,itx))
 
-    if(.not. allocated(mix%kappa10_mm)) allocate(mix%kappa10_mm(dim_m_max,dim_m_max,2,nphi_max,itx))  ! 2: \kappa10^++,\kappa10^--; itx: nutron, proton  
-    if(.not. allocated(mix%pkappa10_mm)) allocate(mix%pkappa10_mm(dim_m_max,dim_m_max,2,nphi_max,itx))
-    if(.not. allocated(mix%kappa01c_mm)) allocate(mix%kappa01c_mm(dim_m_max,dim_m_max,2,nphi_max,itx))  ! 2: \kappa01*^++,\kappa01*^--; itx: nutron, proton
-    if(.not. allocated(mix%pkappa01c_mm)) allocate(mix%pkappa01c_mm(dim_m_max,dim_m_max,2,nphi_max,itx))
+    if(.not. allocated(mix%kappa10_mm)) allocate(mix%kappa10_mm(dim_m_max,dim_m_max,4,nphi_max,itx))  ! 2: \kappa10^++,\kappa10^--, \kappa10^+-,\kappa10^-+; itx: nutron, proton  
+    if(.not. allocated(mix%pkappa10_mm)) allocate(mix%pkappa10_mm(dim_m_max,dim_m_max,4,nphi_max,itx))
+    if(.not. allocated(mix%kappa01c_mm)) allocate(mix%kappa01c_mm(dim_m_max,dim_m_max,4,nphi_max,itx))  ! 2: \kappa01*^++,\kappa01*^--,\kappa01*^+-,\kappa01*^-+; itx: nutron, proton
+    if(.not. allocated(mix%pkappa01c_mm)) allocate(mix%pkappa01c_mm(dim_m_max,dim_m_max,4,nphi_max,itx))
 
     ! rho_S_it(alpha,beta,gamma,phi,it) with fixed alpha, beta,gamma
     if(.not. allocated(mix%rho_S_it)) allocate(mix%rho_S_it(ngr*ntheta*nphi,nphi_max,itx)) ! ((x,theta,phi),phi_it,it)
@@ -522,7 +522,7 @@ subroutine calculate_mixed_density_tensor_matrix_elements(iphi,phi,it)
     ei2phi = cdexp(2*cphi)
     call mixed_density_matrix_elments
     call mixed_tensor_matrix_elements
-    call mixed_kappa_matrix_elements
+    call mixed_kappa_matrix_elements(with_f=.False.)
     contains
     subroutine mixed_density_matrix_elments
         !--------------------------------------------------------------------------------------
@@ -697,7 +697,7 @@ subroutine calculate_mixed_density_tensor_matrix_elements(iphi,phi,it)
                 nm2= BS%HO_sph%nljm(i0g+m2,4) ! m_j + 1/2
                 nj2_half = nj2 - 0.5 ! j
                 nm2_half = nm2 - 0.5 ! m_j
-                m2_reversed = m2 - 2*nm2 + 1 ! location of |-m1>
+                m2_reversed = m2 - 2*nm2 + 1 ! location of |-m2>
                 G(truncated_k,m2) = wf1%fg(nf+m2,k,it)*vk
                 G(truncated_dim+truncated_k,m2)  = - wf1%fg(nf+m2_reversed,k,it)*vk*(-1)**(Int(nl2+nj2_half+nm2_half))
                 pG(truncated_k,m2) = wf1%fg(nf+m2,k,it)*vk
@@ -798,7 +798,7 @@ subroutine calculate_mixed_density_tensor_matrix_elements(iphi,phi,it)
                 if(wf1%v2d(k,it) <= wf1%eps_occupation(it)) cycle
                 vk = dsqrt(wf1%v2(k,it))
                 uk = dsqrt(1-wf1%v2(k,it))
-                f_k = wf2%skk(k,it)
+                f_k = wf1%skk(k,it)
                 truncated_k = wf1%truncated_index(k,it)
                 do m1 = 1,ndsp !|m1>
                     ! nr1= BS%HO_sph%nljm(i0sp+m1,1) ! n_r
@@ -839,7 +839,7 @@ subroutine calculate_mixed_density_tensor_matrix_elements(iphi,phi,it)
             mix%pkappac_mm(:,:,ifg,iphi,it) = tmp
         end do
     end subroutine
-    subroutine mixed_kappa_matrix_elements
+    subroutine mixed_kappa_matrix_elements(with_f)
         !--------------------------------------------------------------------------------------
         !  calculate mixed tensor matrix elements:
         !   kappa10_mm'  = <q1|c_m' c_m R|q2>/<q1|R|q2>.
@@ -847,8 +847,12 @@ subroutine calculate_mixed_density_tensor_matrix_elements(iphi,phi,it)
         !
         !  \kappa10_mm'++  = \sqrt{f_1}\sqrt{f_2} R_mm'' (F_2)_m''q (V_2*)_ql (D^-1)_lk (U_1^T)_kp (F_1^T)_pm'
         !  \kappa10_nn'--  = \sqrt{f_1}\sqrt{f_2} R_nn'' (G_2)_n''q (V_2*)_ql (D^-1)_lk (U_1^T)_kp (G_1^T)_pn'
+        !  \kappa10_mn+-  = \sqrt{f_1}\sqrt{f_2} R_mm'' (F_2)_m''q (V_2*)_ql (D^-1)_lk (U_1^T)_kp (G_1^T)_pn
+        !  \kappa10_nm-+  = \sqrt{f_1}\sqrt{f_2} R_nn'' (G_2)_n''q (V_2*)_ql (D^-1)_lk (U_1^T)_kp (F_1^T)_pm
         !  \kappa01_m'm++* = \sqrt{f_1}\sqrt{f_2} R*_mm'' (F_2)_m''q (U_2*)_ql (D^-1)_lk (V_1^T)_kp (F_1^T)_pm'
         !  \kappa01_n'n--* = \sqrt{f_1}\sqrt{f_2} R*_nn'' (G_2)_n''q (U_2*)_ql (D^-1)_lk (V_1^T)_kp (G_1^T)_pn'
+        !  \kappa01_mn+-* = \sqrt{f_1}\sqrt{f_2} R*_nn'' (G_2)_n''q (U_2*)_ql (D^-1)_lk (V_1^T)_kp (F_1^T)_pm
+        !  \kappa01_nm-+* = \sqrt{f_1}\sqrt{f_2} R*_mm'' (F_2)_m''q (U_2*)_ql (D^-1)_lk (V_1^T)_kp (G_1^T)_pn
         !  where m and m' are the spherical harmonic basis indices of the large component,
         !        n and n' are the spherical harmonic basis indices of the small component.
         !
@@ -863,16 +867,18 @@ subroutine calculate_mixed_density_tensor_matrix_elements(iphi,phi,it)
         !         (      0    u_p   )        (    -v_p   0     )
         !         (             ... )        (             ... )
         ! Returns:
-        !  * kappa10_mm(:,:,ifg,iphi,it): ifg=1: \kappa10_mm'++, ifg=2: \kappa10_nn'--
-        !  * kappa01c_mm(:,:,ifg,iphi,it): ifg=1: \kappa01_m'm++*, ifg=2: \kappa01_n'n--*
+        !  * kappa10_mm(:,:,ifg,iphi,it): ifg=1: \kappa10_mm'++, ifg=2: \kappa10_nn'--, ifg=3: \kappa10_mn^+-, ifg=4: \kappa10_nm^-+
+        !  * kappa01c_mm(:,:,ifg,iphi,it): ifg=1: \kappa01_m'm++*, ifg=2: \kappa01_n'n--*, ifg=3: \kappa01_mn^+-*, ifg=4: \kappa01_nm^-+*
         !  * pkappa10_mm(:,:,ifg,iphi,it)
         !  * pkappa01c_mm(:,:,ifg,iphi,it)
         !--------------------------------------------------------------------------------------
         integer :: truncated_dim,dim_m_max,ifg,i0sp,ndsp,nfgsp,l,truncated_l,m1,k,truncated_k,nl1,nj1,nm1,nm1_reversed, &
-                    m1_reversed,m2
+                    m1_reversed,m2,i0f,i0g,nf,ng,nl2,nj2,nm2,nm2_reversed,m2_reversed
         complex(r64) :: vl
-        real(r64) :: f_l,ul,uk,vk,f_k,nj1_half,nm1_half
-        complex(r64), dimension(:,:),allocatable :: Av,pAv,Au,pAu,B10,pB10,B01,pB01,Cu,pCu,Cv,pCv,tmp
+        real(r64) :: f_l,ul,uk,vk,f_k,nj1_half,nm1_half,nj2_half,nm2_half
+        complex(r64), dimension(:,:),allocatable :: Av,pAv,Au,pAu,B10,pB10,B01,pB01,Cu,pCu,Cv,pCv,tmp,RFv,pRFv,RFu,pRFu,RGv, &
+                                                    pRGv,RGu,pRGu,Fu,pFu,Fv,pFv,Gu,pGu,Gv,pGv
+        logical :: with_f
         if (wf1%truncated_dim(it) /=wf2%truncated_dim(it) ) stop "Wrong truncated dimension!"
         truncated_dim = wf1%truncated_dim(it)
         dim_m_max = max(BS%HO_sph%idsp(1,1), BS%HO_sph%idsp(1,2))
@@ -889,6 +895,23 @@ subroutine calculate_mixed_density_tensor_matrix_elements(iphi,phi,it)
         allocate(Cv(2*truncated_dim,dim_m_max))
         allocate(pCv(2*truncated_dim,dim_m_max))
         allocate(tmp(dim_m_max,dim_m_max))
+        allocate(RFv(BS%HO_sph%idsp(1,1),2*truncated_dim))
+        allocate(pRFv(BS%HO_sph%idsp(1,1),2*truncated_dim))
+        allocate(RFu(BS%HO_sph%idsp(1,1),2*truncated_dim))
+        allocate(pRFu(BS%HO_sph%idsp(1,1),2*truncated_dim))
+        allocate(RGv(BS%HO_sph%idsp(1,2),2*truncated_dim))
+        allocate(pRGv(BS%HO_sph%idsp(1,2),2*truncated_dim))
+        allocate(RGu(BS%HO_sph%idsp(1,2),2*truncated_dim))
+        allocate(pRGu(BS%HO_sph%idsp(1,2),2*truncated_dim))
+        allocate(Fu(2*truncated_dim,BS%HO_sph%idsp(1,1)))
+        allocate(pFu(2*truncated_dim,BS%HO_sph%idsp(1,1)))
+        allocate(Fv(2*truncated_dim,BS%HO_sph%idsp(1,1)))
+        allocate(pFv(2*truncated_dim,BS%HO_sph%idsp(1,1)))
+        allocate(Gu(2*truncated_dim,BS%HO_sph%idsp(1,2)))
+        allocate(pGu(2*truncated_dim,BS%HO_sph%idsp(1,2)))
+        allocate(Gv(2*truncated_dim,BS%HO_sph%idsp(1,2)))
+        allocate(pGv(2*truncated_dim,BS%HO_sph%idsp(1,2)))
+        ! \kappa10_mm'^++ and \kappa10_nn'^--; \kappa01_m'm^++* and \kappa01_n'n^--*
         do ifg = 1, 2
             i0sp = BS%HO_sph%iasp(1,ifg)
             ndsp = BS%HO_sph%idsp(1,ifg)
@@ -897,7 +920,11 @@ subroutine calculate_mixed_density_tensor_matrix_elements(iphi,phi,it)
                 if(wf2%v2d(l,it) <= wf2%eps_occupation(it)) cycle
                 vl = sqrt(wf2%v2(l,it))*ei2phi
                 ul = dsqrt(1-wf2%v2(l,it))
-                f_l = wf2%skk(l,it)
+                if(with_f) then 
+                    f_l = wf2%skk(l,it)
+                else 
+                    f_l = 1.d0
+                end if 
                 truncated_l = wf2%truncated_index(l,it)
                 do m1 = 1, ndsp
                     Av(m1,truncated_l) = fg_rotated(nfgsp+m1,l,it)*vl*dsqrt(f_l)
@@ -935,7 +962,11 @@ subroutine calculate_mixed_density_tensor_matrix_elements(iphi,phi,it)
                 if(wf1%v2d(k,it) <= wf1%eps_occupation(it)) cycle
                 vk = dsqrt(wf1%v2(k,it))
                 uk = dsqrt(1-wf1%v2(k,it))
-                f_k = wf2%skk(k,it)
+                if(with_f) then 
+                    f_k = wf1%skk(k,it)
+                else 
+                    f_k = 1.d0
+                end if 
                 truncated_k = wf1%truncated_index(k,it)
                 do m1 = 1,ndsp !|m1>
                     ! nr1= BS%HO_sph%nljm(i0sp+m1,1) ! n_r
@@ -983,6 +1014,163 @@ subroutine calculate_mixed_density_tensor_matrix_elements(iphi,phi,it)
                 do m2 = 1,ndsp
                     mix%pkappa01c_mm(m1,m2,ifg,iphi,it) = tmp(m2,m1)
                 end do
+            end do
+        end do
+        ! \kappa10_mn^+- and \kappa10_nm^-+; \kappa01_mn^+-* and \kappa01_nm^-+*
+        i0f = BS%HO_sph%iasp(1,1)
+        i0g = BS%HO_sph%iasp(1,2)
+        nf = BS%HO_sph%idsp(1,1)
+        ng = BS%HO_sph%idsp(1,2)
+        do l = 1, wf2%nk(it) ! loop over single particle basis
+            if(wf2%v2d(l,it) <= wf2%eps_occupation(it)) cycle
+            vl = sqrt(wf2%v2(l,it))*ei2phi
+            ul = dsqrt(1-wf2%v2(l,it))
+            if(with_f) then 
+                f_l = wf2%skk(l,it)
+            else 
+                f_l = 1.d0
+            end if 
+            truncated_l = wf2%truncated_index(l,it)
+            do m1 = 1, nf
+                RFv(m1,truncated_l) = fg_rotated(m1,l,it)*vl*dsqrt(f_l)
+                RFv(m1,truncated_dim+truncated_l) = fg_rotated(m1,-l, it)*vl*dsqrt(f_l)
+                pRFv(m1,truncated_l) = pfg_rotated(m1,l,it)*vl*dsqrt(f_l)
+                pRFv(m1,truncated_dim+truncated_l) = pfg_rotated(m1,-l, it)*vl*dsqrt(f_l)
+                RFu(m1,truncated_l) = DCONJG(fg_rotated(m1,l,it))*ul*dsqrt(f_l)
+                RFu(m1,truncated_dim+truncated_l) = DCONJG(fg_rotated(m1,-l,it))*ul*dsqrt(f_l)
+                pRFu(m1,truncated_l) = DCONJG(pfg_rotated(m1,l,it))*ul*dsqrt(f_l)
+                pRFu(m1,truncated_dim+truncated_l) = DCONJG(pfg_rotated(m1,-l, it))*ul*dsqrt(f_l)
+            end do 
+            do m2 = 1, ng
+                RGv(m2,truncated_l) = fg_rotated(nf+m2,l,it)*vl*dsqrt(f_l)
+                RGv(m2,truncated_dim+truncated_l) = fg_rotated(nf+m2,-l, it)*vl*dsqrt(f_l)
+                pRGv(m2,truncated_l) = pfg_rotated(nf+m2,l,it)*vl*dsqrt(f_l)
+                pRGv(m2,truncated_dim+truncated_l) = pfg_rotated(nf+m2,-l, it)*vl*dsqrt(f_l)
+                RGu(m2,truncated_l) = DCONJG(fg_rotated(nf+m2,l,it))*ul*dsqrt(f_l)
+                RGu(m2,truncated_dim+truncated_l) = DCONJG(fg_rotated(nf+m2,-l,it))*ul*dsqrt(f_l)
+                pRGu(m2,truncated_l) = DCONJG(pfg_rotated(nf+m2,l,it))*ul*dsqrt(f_l)
+                pRGu(m2,truncated_dim+truncated_l) = DCONJG(pfg_rotated(nf+m2,-l, it))*ul*dsqrt(f_l)
+            end do 
+
+            do k = 1, wf1%nk(it)
+                if(wf1%v2d(k,it) <= wf1%eps_occupation(it)) cycle
+                truncated_k = wf1%truncated_index(k,it)
+                B10(truncated_l,truncated_k) = D_inv(truncated_dim+truncated_l,truncated_k,it)
+                B10(truncated_l,truncated_dim+truncated_k) = D_inv(truncated_dim+truncated_l,truncated_dim+truncated_k,it)
+                B10(truncated_dim+truncated_l,truncated_k) = -D_inv(truncated_l,truncated_k,it)
+                B10(truncated_dim+truncated_l,truncated_dim+truncated_k) = -D_inv(truncated_l,truncated_dim+truncated_k,it)
+                pB10(truncated_l,truncated_k) = pD_inv(truncated_dim+truncated_l,truncated_k,it)
+                pB10(truncated_l,truncated_dim+truncated_k) = pD_inv(truncated_dim+truncated_l,truncated_dim+truncated_k,it)
+                pB10(truncated_dim+truncated_l,truncated_k) = -pD_inv(truncated_l,truncated_k,it)
+                pB10(truncated_dim+truncated_l,truncated_dim+truncated_k) = -pD_inv(truncated_l,truncated_dim+truncated_k,it)
+                !
+                B01(truncated_l,truncated_k) = D_inv(truncated_l,truncated_dim+truncated_k,it)
+                B01(truncated_l,truncated_dim+truncated_k) = -D_inv(truncated_l,truncated_k,it)
+                B01(truncated_dim+truncated_l,truncated_k) = D_inv(truncated_dim+truncated_l,truncated_dim+truncated_k,it)
+                B01(truncated_dim+truncated_l,truncated_dim+truncated_k) = -D_inv(truncated_dim+truncated_l,truncated_k,it)
+                pB01(truncated_l,truncated_k) = pD_inv(truncated_l,truncated_dim+truncated_k,it)
+                pB01(truncated_l,truncated_dim+truncated_k) = -pD_inv(truncated_l,truncated_k,it)
+                pB01(truncated_dim+truncated_l,truncated_k) = pD_inv(truncated_dim+truncated_l,truncated_dim+truncated_k,it)
+                pB01(truncated_dim+truncated_l,truncated_dim+truncated_k) = -pD_inv(truncated_dim+truncated_l,truncated_k,it)
+            end do
+        end do
+        do k = 1, wf1%nk(it)
+            if(wf1%v2d(k,it) <= wf1%eps_occupation(it)) cycle
+            vk = dsqrt(wf1%v2(k,it))
+            uk = dsqrt(1-wf1%v2(k,it))
+            if(with_f) then 
+                f_k = wf1%skk(k,it)
+            else 
+                f_k = 1.d0
+            end if 
+            truncated_k = wf1%truncated_index(k,it)
+            do m1 = 1,nf
+                ! nr1= BS%HO_sph%nljm(i0f+m1,1) ! n_r
+                nl1= BS%HO_sph%nljm(i0f+m1,2) ! l
+                nj1= BS%HO_sph%nljm(i0f+m1,3) ! j +1/2
+                nm1= BS%HO_sph%nljm(i0f+m1,4) ! m_j + 1/2
+                nj1_half = nj1 - 0.5 ! j
+                nm1_half = nm1 - 0.5 ! m_j
+                ! nm1_reversed = 1 - nm1 ! -m_j + 1/2
+                ! nm1_reversed_half = nm1_reversed - 0.5 ! -m_j
+                m1_reversed = m1 - 2*nm1 + 1 ! location of |-m1>
+                Fu(truncated_k,m1) = wf1%fg(m1,k,it)*uk*dsqrt(f_k)
+                Fu(truncated_dim+truncated_k,m1) = wf1%fg(m1_reversed,k,it)*uk*dsqrt(f_k) &
+                                                    *(-1)**(Int(nl1+nj1_half+nm1_half))
+                pFu(truncated_k,m1) = wf1%fg(m1,k,it)*uk*dsqrt(f_k)
+                pFu(truncated_dim+truncated_k,m1) = wf1%fg(m1_reversed,k,it)*uk*dsqrt(f_k) &
+                                                    *(-1)**(Int(nl1+nj1_half+nm1_half))
+                Fv(truncated_k,m1) = wf1%fg(m1,k,it)*vk*dsqrt(f_k)
+                Fv(truncated_dim+truncated_k,m1) = wf1%fg(m1_reversed,k,it)*vk*dsqrt(f_k) &
+                                                    *(-1)**(Int(nl1+nj1_half+nm1_half))
+                pFv(truncated_k,m1) = wf1%fg(m1,k,it)*vk*dsqrt(f_k)
+                pFv(truncated_dim+truncated_k,m1) = wf1%fg(m1_reversed,k,it)*vk*dsqrt(f_k) &
+                                                    *(-1)**(Int(nl1+nj1_half+nm1_half))
+            end do
+            do m2 = 1,ng
+                ! nr2= BS%HO_sph%nljm(i0g+m2,1) ! n_r
+                nl2= BS%HO_sph%nljm(i0g+m2,2) ! l
+                nj2= BS%HO_sph%nljm(i0g+m2,3) ! j +1/2
+                nm2= BS%HO_sph%nljm(i0g+m2,4) ! m_j + 1/2
+                nj2_half = nj2 - 0.5 ! j
+                nm2_half = nm2 - 0.5 ! m_j
+                ! nm2_reversed = 1 - nm2 ! -m_j + 1/2
+                ! nm2_reversed_half = nm2_reversed - 0.5 ! -m_j
+                m2_reversed = m2 - 2*nm2 + 1 ! location of |-m2>
+                Gu(truncated_k,m2) = wf1%fg(nf+m2,k,it)*uk*dsqrt(f_k)
+                Gu(truncated_dim+truncated_k,m2) = -wf1%fg(nf+m2_reversed,k,it)*uk*dsqrt(f_k) &
+                                                    *(-1)**(Int(nl2+nj2_half+nm2_half))
+                pGu(truncated_k,m2) = wf1%fg(nf+m2,k,it)*uk*dsqrt(f_k)
+                pGu(truncated_dim+truncated_k,m2) = -wf1%fg(nf+m2_reversed,k,it)*uk*dsqrt(f_k) &
+                                                    *(-1)**(Int(nl2+nj2_half+nm2_half))
+                Gv(truncated_k,m2) = wf1%fg(nf+m2,k,it)*vk*dsqrt(f_k)
+                Gv(truncated_dim+truncated_k,m2) = -wf1%fg(nf+m2_reversed,k,it)*vk*dsqrt(f_k) &
+                                                    *(-1)**(Int(nl2+nj2_half+nm2_half))
+                pGv(truncated_k,m2) = wf1%fg(nf+m2,k,it)*vk*dsqrt(f_k)
+                pGv(truncated_dim+truncated_k,m2) = -wf1%fg(nf+m2_reversed,k,it)*vk*dsqrt(f_k) &
+                                                    *(-1)**(Int(nl2+nj2_half+nm2_half))
+            end do
+        end do 
+        ! kappa10    
+        call cmatmul_ABC(RFv(1:nf,1:2*truncated_dim), B10(1:2*truncated_dim,1:2*truncated_dim), Gu(1:2*truncated_dim,1:ng), & 
+                        tmp(1:nf,1:ng), nf, 2*truncated_dim, 2*truncated_dim, ng)
+        mix%kappa10_mm(:,:,3,iphi,it) = tmp ! ifg = 3 is kappa10^+-
+        call cmatmul_ABC(pRFv(1:nf,1:2*truncated_dim), pB10(1:2*truncated_dim,1:2*truncated_dim), pGu(1:2*truncated_dim,1:ng), & 
+                        tmp(1:nf,1:ng), nf, 2*truncated_dim, 2*truncated_dim, ng)
+        mix%pkappa10_mm(:,:,3,iphi,it) = tmp ! ifg = 3 is pkappa10^+-
+        call cmatmul_ABC(RGv(1:ng,1:2*truncated_dim), B10(1:2*truncated_dim,1:2*truncated_dim), Fu(1:2*truncated_dim,1:nf), & 
+                        tmp(1:ng,1:nf), ng, 2*truncated_dim, 2*truncated_dim, nf)
+        mix%kappa10_mm(:,:,4,iphi,it) = tmp ! ifg = 4 is kappa10^-+
+        call cmatmul_ABC(pRGv(1:ng,1:2*truncated_dim), pB10(1:2*truncated_dim,1:2*truncated_dim), pFu(1:2*truncated_dim,1:nf), & 
+                        tmp(1:ng,1:nf), ng, 2*truncated_dim, 2*truncated_dim, nf)
+        mix%pkappa10_mm(:,:,4,iphi,it) = tmp ! ifg = 4 is pkappa10^-+
+        ! kappa01*
+        call cmatmul_ABC(RFu(1:nf,1:2*truncated_dim), B01(1:2*truncated_dim,1:2*truncated_dim), Gv(1:2*truncated_dim,1:ng), &
+                        tmp(1:nf,1:ng), nf, 2*truncated_dim, 2*truncated_dim, ng)
+        do m1 = 1, ng
+            do m2 = 1, nf
+                mix%kappa01c_mm(m1,m2,4,iphi,it) = tmp(m2,m1) ! ! ifg = 4 is kappa01^-+*
+            end do
+        end do
+        call cmatmul_ABC(pRFu(1:nf,1:2*truncated_dim), pB01(1:2*truncated_dim,1:2*truncated_dim), pGv(1:2*truncated_dim,1:ng), &
+                        tmp(1:nf,1:ng), nf, 2*truncated_dim, 2*truncated_dim, ng)
+        do m1 = 1, ng
+            do m2 = 1, nf
+                mix%pkappa01c_mm(m1,m2,4,iphi,it) = tmp(m2,m1) ! ! ifg = 4 is pkappa01^-+*
+            end do
+        end do
+        call cmatmul_ABC(RGu(1:ng,1:2*truncated_dim), B01(1:2*truncated_dim,1:2*truncated_dim), Fv(1:2*truncated_dim,1:nf), &
+                        tmp(1:ng,1:nf), ng, 2*truncated_dim, 2*truncated_dim, nf)
+        do m1 = 1, nf
+            do m2 = 1, ng
+                mix%kappa01c_mm(m1,m2,3,iphi,it) = tmp(m2,m1) ! ! ifg = 3 is kappa01^+-*
+            end do
+        end do
+        call cmatmul_ABC(pRGu(1:ng,1:2*truncated_dim), pB01(1:2*truncated_dim,1:2*truncated_dim), pFv(1:2*truncated_dim,1:nf), &
+                        tmp(1:ng,1:nf), ng, 2*truncated_dim, 2*truncated_dim, nf)
+        do m1 = 1, nf
+            do m2 = 1, ng
+                mix%pkappa01c_mm(m1,m2,3,iphi,it) = tmp(m2,m1) ! ! ifg = 3 is pkappa01^+-*
             end do
         end do
     end subroutine
