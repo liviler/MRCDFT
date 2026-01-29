@@ -13,10 +13,10 @@ ELE=Ne #Mg
 A=22 # 24
 NUC=$A${ELE}   # the DIC code generates the files with nucleus name as element name
 Nf=6
-mq=2 #55 #11 # 15 # 5 #13 #13 #13 # 15 # 016 # 014 #21 #013 # 010       # number of mesh point in q-space
+mq=4 #55 #11 # 15 # 5 #13 #13 #13 # 15 # 016 # 014 #21 #013 # 010       # number of mesh point in q-space
 iam=0 # 1 # 0 # 0 #      # 0: 1D; 1: 3D
-iphi=05 #07 #09 # 01 # 07 #09 #09 # 01  #     # number of meshpoints in gauge angle 
-nbet=08 #16 # 14 #14 # 14 #14 # 14 # 10 # 14 # 14 # 14 # 01           # 01 -> pure PNP
+iphi=07 #07 #09 # 01 # 07 #09 #09 # 01  #     # number of meshpoints in gauge angle 
+nbet=12 #16 # 14 #14 # 14 #14 # 14 # 10 # 14 # 14 # 14 # 01           # 01 -> pure PNP
 
 iBlock=0 # 0 for even-even; 1 for odd-mass
 
@@ -34,8 +34,8 @@ pathwork=../../GCM/22Ne                    # directory where calculations are st
 pathexec=${pathwork}/exec                      # directory where the exe files are stored
 
 cd ${pathexec}
-export GCM_FILES_DIR=$DATAPATH  #/home/research/RPG/yli/data/${ELE}${A}/wfs
-touch $GCM_FILES_DIR/HFB.wfs
+export GCM_FILES_DIR=$DATAPATH
+touch $GCM_FILES_DIR/HFB.wf
 echo $GCM_FILES_DIR
 
  if [[ -f data ]]; then rm data ; fi
@@ -49,11 +49,11 @@ echo $GCM_FILES_DIR
 cat <<EOF > data 
 ${ELE} $A                                                ! nucleus under consideration
 isoa     =    0                                          ! 0(not odd-A); 1 (is odd-A)                 
-n0f      =    6                                          ! eMax: number of HO shells 
+n0f      =   ${Nf}                                          ! eMax: number of HO shells 
 iswi(1)  =   ${iam}                                      ! AMP    : (0) 1DAMP (1) 3DAMP
 iphi     =   ${iphi}                                     ! number of meshpoints in gauge angle 
 nbet     =   ${nbet}                                     !  01 -> Pure PNP; others, PNP+AMP
-Jmax     =    4                                          ! maximal spin value to be                 
+Jmax     =    2                                          ! maximal spin value to be                 
 kmax     =    4                                          ! number of states for each spin          
 Zeta     = 5.00E-03 5.00E-03 5.00E-03 5.00E-03 5.00E-03  ! cutoff in norm            
 EOF
@@ -66,12 +66,16 @@ EOF
 cat <<EOF > betgam.dat 
              ${mq}                   ! number of mesh-point in q-space  
     0.10  0.00   0.00
+    0.10  0.30   0.00
     0.20  0.00   0.00
+    0.20  0.30   0.00
 EOF
 cat <<EOF > betgam2.dat 
              ${mq}                   ! number of mesh-point in q-space  
     0.10  0.00   0.00
+    0.10  0.30   0.00
     0.20  0.00   0.00
+    0.20  0.30   0.00
 EOF
 cat <<EOF > bk_betgam.dat 
   0.18  0.00     0
@@ -84,9 +88,9 @@ cat <<EOF > bk_betgam.dat
   0.18  0.35     0
 EOF
 pwd
-./run.exe #> ${fout}.out
+./run.exe > ${fout}.out
 
-#cat ${fout}.out
+cat ${fout}.out
 echo hwgcm calculation is finished
 echo ...done
 
