@@ -104,11 +104,11 @@ subroutine read_Proj_configuration(ifPrint)
         pko_option%DsType = input_par%DsType
         ! set TD type
         pko_option%TDType = input_par%TDType
-        ! max lambda of 1B transition density
-        TDs%lambda_max = input_par%lambda_max
+        TDs%lambda_max = input_par%lambda_max ! max lambda of 1B transition density
     end subroutine
     subroutine printParameters
         use Globals, only: input_par,pko_option,gcm_space,TDs
+        integer :: Strlength = 40
         character(len=5) :: AMP_char, PNP_char
         if(pko_option%AMPtype==0) then 
             AMP_char = 'noAMP'
@@ -125,38 +125,49 @@ subroutine read_Proj_configuration(ifPrint)
 
         write(*,'(5x,A)') AMP_char//'  +  '//PNP_char//'+  '//'PP :'
         if(pko_option%AMPtype /= 0) then
-            write(*,"(5x,a,':   ',3(i2,a))") adjust_left('Number euler angles',35),input_par%nalpha,' (nalpha),  ',input_par%nbeta,' (nbeta),  ',input_par%ngamma,' (ngamma)'
+            write(*,"(5x,a,':   ',3(i2,a))") adjust_left('Number euler angles',Strlength),input_par%nalpha,' (nalpha),  ',input_par%nbeta,' (nbeta),  ',input_par%ngamma,' (ngamma)'
             if(input_par%Euler_Symmetry==0) then
-                write(*,"(5x,a,':   ',a)") adjust_left('Symmetry of euler angles',35),'no'
+                write(*,"(5x,a,':   ',a)") adjust_left('Symmetry of euler angles',Strlength),'no'
             else if(input_par%Euler_Symmetry==1) then
-                write(*,"(5x,a,':   ',a)") adjust_left('Symmetry of euler angles',35),'Axially'
+                write(*,"(5x,a,':   ',a)") adjust_left('Symmetry of euler angles',Strlength),'Axially'
             else if(input_par%Euler_Symmetry==2) then
-                write(*,"(5x,a,':   ',a)") adjust_left('Symmetry of euler angles',35),'D2'
+                write(*,"(5x,a,':   ',a)") adjust_left('Symmetry of euler angles',Strlength),'D2'
             end if 
         end if 
         if(pko_option%PNPtype /= 0) then
-            write(*,"(5x,a,':   ',i2,a)") adjust_left('Number gauge angles',35),input_par%nphi,' (nphi)'
+            write(*,"(5x,a,':   ',i2,a)") adjust_left('Number gauge angles',Strlength),input_par%nphi,' (nphi)'
         end if
 
         if(pko_option%Kernel_Symmetry==0) then 
-            write(*,"(5x,a,':   ',a)") adjust_left('Kernels',35),'All kernels'
+            write(*,"(5x,a,':   ',a)") adjust_left('Kernels',Strlength),'All kernels'
         else if(pko_option%Kernel_Symmetry==1) then
-            write(*,"(5x,a,':   ',a)") adjust_left('Kernels',35),'Upper triangular kernels'
+            write(*,"(5x,a,':   ',a)") adjust_left('Kernels',Strlength),'Upper triangular kernels'
         else if(pko_option%Kernel_Symmetry==2) then
-            write(*,"(5x,a,':   ',a)") adjust_left('Kernels',35),'Diagonal kernels'
+            write(*,"(5x,a,':   ',a)") adjust_left('Kernels',Strlength),'Diagonal kernels'
         end if 
-        write(*,"(5x,a,':   ',a,i3,a,i3,a)") adjust_left('Quadratic constraint q1 range',35), '[',gcm_space%q1_start,',',gcm_space%q1_end,' ]'
-        write(*,"(5x,a,':   ',a,i3,a,i3,a)") adjust_left('Quadratic constraint q2 range',35), '[',gcm_space%q2_start,',',gcm_space%q2_end,' ]'
+        write(*,"(5x,a,':   ',a,i3,a,i3,a)") adjust_left('Quadratic constraint q1 range',Strlength), '[',gcm_space%q1_start,',',gcm_space%q1_end,' ]'
+        write(*,"(5x,a,':   ',a,i3,a,i3,a)") adjust_left('Quadratic constraint q2 range',Strlength), '[',gcm_space%q2_start,',',gcm_space%q2_end,' ]'
 
-        write(*,"(5x,a,':   ',i3)") adjust_left('Maximal J value',35), gcm_space%Jmax
-        write(*,"(5x,a,':   ',i3)") adjust_left('Maximal lambda value(1BTD)',35),TDs%lambda_max
+        write(*,"(5x,a,':   ',i3)") adjust_left('Maximal J value',Strlength), gcm_space%Jmax
+        if (pko_option%DsType /=0 ) then
+            write(*,"(5x,a,':   ',a)") adjust_left('calculate density ME',Strlength),'Yes'
+        else 
+            write(*,"(5x,a,':   ',a)") adjust_left('calculate density ME',Strlength),'No'
+        end if 
+
+        if (pko_option%TDType /=0 ) then
+            write(*,"(5x,a,':   ',a)") adjust_left('Calculate reduced transition density ME',Strlength),'Yes'
+            write(*,"(5x,a,':   ',i3)") adjust_left('Maximal lambda value(1BTD)',Strlength),TDs%lambda_max
+        else 
+            write(*,"(5x,a,':   ',a)") adjust_left('Calculate reduced transition density ME',Strlength),'No'
+        end if 
 
         if(pko_option%ihf == 1) then 
-            write(*,"(5x,a,':   ',a)") adjust_left('Norm overlap formula',35),'sqrt(det(D) det(R))'
+            write(*,"(5x,a,':   ',a)") adjust_left('Norm overlap formula',Strlength),'sqrt(det(D) det(R))'
         else if(pko_option%ihf == 2) then
-            write(*,"(5x,a,':   ',a)") adjust_left('Norm overlap formula',35),'Robledo (2009) formula'
+            write(*,"(5x,a,':   ',a)") adjust_left('Norm overlap formula',Strlength),'Robledo (2009) formula'
         else if(pko_option%ihf == 3) then
-            write(*,"(5x,a,':   ',a)") adjust_left('Norm overlap formula',35),'Bertsch & Robledo (2011) formula'
+            write(*,"(5x,a,':   ',a)") adjust_left('Norm overlap formula',Strlength),'Bertsch & Robledo (2011) formula'
         end if 
         write(*,"(a)") '=========================================================================================='
     end subroutine
@@ -462,9 +473,9 @@ subroutine write_eccentricity_operators_kernels(q1,q2)
     integer :: q1,q2
     integer :: J,K1,K2,parity
     character(1), dimension(2) :: ParityChar = ['+', '-']
-    character(len=*), parameter ::  format1 = "(3i5,4x,a,4f5.3)", &
+    character(len=*), parameter ::  format1 = "(3i5,4x,a,4(4x,f5.3))", &
                                     format2 = "(2e15.8)"
-    open(outputfile%u_outputelem,form='formatted',file=OUTPUT_PATH//'Eccentricity_operators_kernels')
+    open(outputfile%u_outputelem,form='formatted',file=OUTPUT_PATH//'Eccentricity_operators_kernels.elem')
         do J = 0,0 
             do K1 = -0,0
                 do K2 = -0,0

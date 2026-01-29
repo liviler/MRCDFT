@@ -194,6 +194,7 @@ subroutine read_CDFT_configuration(ifPrint)
     contains
     subroutine printParameters
         use Globals, only: constraint
+        integer ::  Strlength = 40
         character(len=1) :: parity_char(2)
         character(len=*), parameter :: format11 = "(a,2i5)"
         parity_char = ['+','-']
@@ -201,63 +202,63 @@ subroutine read_CDFT_configuration(ifPrint)
         write(*,"(a)") '============================================================================================'
         if(option%eqType==0) write(*,'(5x,A)') 'Solve Dirac (BCS) Equation :'
         if(option%eqType==1) write(*,'(5x,A)') 'Solve RHB Equation :'
-        write(*,"(5x,a,':   ',a3,i4)") adjust_left('Nucleus',35), input_par%nucleus_name, input_par%nucleus_mass_number
+        write(*,"(5x,a,':   ',a3,i4)") adjust_left('Nucleus',Strlength), input_par%nucleus_name, input_par%nucleus_mass_number
 
-        write(*,"(5x,a,':   ',i2)") adjust_left('Number of oscillator shells (N0F)',35), input_par%basis_n0f
+        write(*,"(5x,a,':   ',i2)") adjust_left('Number of oscillator shells (N0F)',Strlength), input_par%basis_n0f
         if (input_par%basis_b0 <= 0.d0) then 
-            write(*,"(5x,a,':   ',a)") adjust_left('Oscillator parameter b0 (fm)',35),'use the empirical formula'
+            write(*,"(5x,a,':   ',a)") adjust_left('Oscillator parameter b0 (fm)',Strlength),'use the empirical formula'
         else 
-            write(*,"(5x,a,':   ',f6.3)") adjust_left('Oscillator parameter b0 (fm)',35), input_par%basis_b0
+            write(*,"(5x,a,':   ',f6.3)") adjust_left('Oscillator parameter b0 (fm)',Strlength), input_par%basis_b0
         end if 
-        write(*,"(5x,a,':   ', f7.3)") adjust_left('Oscillator parameter beta0',35), input_par%basis_beta0
+        write(*,"(5x,a,':   ', f7.3)") adjust_left('Oscillator parameter beta0',Strlength), input_par%basis_beta0
 
-        write(*,"(5x,a,':   ',a)") adjust_left('Force Parameter',35),input_par%force_name
-        write(*,"(5x,a,':   ',f7.3,a,2x,f7.3,a)") adjust_left('Pairing strength for delta force',35),input_par%pairing_vpair(1),' (neutrons)',input_par%pairing_vpair(2),' (protons)'
+        write(*,"(5x,a,':   ',a)") adjust_left('Force Parameter',Strlength),input_par%force_name
+        write(*,"(5x,a,':   ',f7.3,a,2x,f7.3,a)") adjust_left('Pairing strength for delta force',Strlength),input_par%pairing_vpair(1),' (neutrons)',input_par%pairing_vpair(2),' (protons)'
 
         if(input_par%constraint_icstr==0) then 
-            write(*,"(5x,a,':   ',a)") adjust_left('Quadratic constraint',35),'no'
+            write(*,"(5x,a,':   ',a)") adjust_left('Quadratic constraint',Strlength),'no'
         else if (input_par%constraint_icstr==1) then
-            write(*,"(5x,a,':   ',a)")adjust_left('Quadratic constraint',35),'beta2'
+            write(*,"(5x,a,':   ',a)")adjust_left('Quadratic constraint',Strlength),'beta2'
         else if (input_par%constraint_icstr==2) then
-            write(*,"(5x,a,':   ',a)")adjust_left('Quadratic constraint',35),'beta2 + beta3'
+            write(*,"(5x,a,':   ',a)")adjust_left('Quadratic constraint',Strlength),'beta2 + beta3'
         end if 
-        write(*,"(5x,a,':   ',i4)")adjust_left('Quadratic constraint number',35),constraint%length
+        write(*,"(5x,a,':   ',i4)")adjust_left('Quadratic constraint number',Strlength),constraint%length
 
         ! Block for odd-Z or odd-N nuclei 
         if(mod(input_par%nucleus_mass_number, 2) == 1) then 
             if(input_par%option_iBlock==0) then 
-                write(*,"(5x,a,':   ',a)") adjust_left('Block',35),'no'
+                write(*,"(5x,a,':   ',a)") adjust_left('Block',Strlength),'no'
             else if (input_par%option_iBlock==1) then 
-                write(*,"(5x,a,':   ',a)") adjust_left('Block',35),'Block the given energy level'
+                write(*,"(5x,a,':   ',a)") adjust_left('Block',Strlength),'Block the given energy level'
                 if(input_par%block_level(1)>0) then 
-                    write(*,"(5x,a,':   ',i5)") adjust_left('Block level of Neutron',35),input_par%block_level(1)
+                    write(*,"(5x,a,':   ',i5)") adjust_left('Block level of Neutron',Strlength),input_par%block_level(1)
                 else 
-                    write(*,"(5x,a,':   ',a)") adjust_left('Block level of Neutron',35),'no'
+                    write(*,"(5x,a,':   ',a)") adjust_left('Block level of Neutron',Strlength),'no'
                 end if 
                 if(input_par%block_level(2)>0) then 
-                    write(*,"(5x,a,':   ',i5)") adjust_left('Block level of Proton ',35),input_par%block_level(2)
+                    write(*,"(5x,a,':   ',i5)") adjust_left('Block level of Proton ',Strlength),input_par%block_level(2)
                 else
-                    write(*,"(5x,a,':   ',a)") adjust_left('Block level of Proton ',35),'no'
+                    write(*,"(5x,a,':   ',a)") adjust_left('Block level of Proton ',Strlength),'no'
                 end if
             else if (input_par%option_iBlock==2) then 
-                write(*,"(5x,a,':   ',a)") adjust_left('Block',35), 'Block according to K^pi'
+                write(*,"(5x,a,':   ',a)") adjust_left('Block',Strlength), 'Block according to K^pi'
                 if(input_par%K(1)*2-1 > 0) then 
-                    write(*,"(5x,a,':   ',i2,'/2',a)") adjust_left('Block K^pi of Neutron',35),(input_par%K(1)*2-1), parity_char(input_par%Pi(1))
+                    write(*,"(5x,a,':   ',i2,'/2',a)") adjust_left('Block K^pi of Neutron',Strlength),(input_par%K(1)*2-1), parity_char(input_par%Pi(1))
                 else 
-                    write(*,"(5x,a,':   ',a)") adjust_left('Block K^pi of Neutron',35), 'no'
+                    write(*,"(5x,a,':   ',a)") adjust_left('Block K^pi of Neutron',Strlength), 'no'
                 end if 
                 if(input_par%K(2)*2-1 > 0) then
-                    write(*,"(5x,a,':   ',i2,'/2',a)") adjust_left('Block K^pi of Proton',35),(input_par%K(2)*2-1), parity_char(input_par%Pi(2))
+                    write(*,"(5x,a,':   ',i2,'/2',a)") adjust_left('Block K^pi of Proton',Strlength),(input_par%K(2)*2-1), parity_char(input_par%Pi(2))
                 else 
-                    write(*,"(5x,a,':   ',a)") adjust_left('Block K^pi of Proton',35), 'no'
+                    write(*,"(5x,a,':   ',a)") adjust_left('Block K^pi of Proton',Strlength), 'no'
                 end if 
             end if 
             if(input_par%option_iBlock>0 .and. input_par%option_blockMethod==1) then
-                write(*,"(5x,a,':   ',a)") adjust_left('Block Method',35), 'blocking -> convergence'
+                write(*,"(5x,a,':   ',a)") adjust_left('Block Method',Strlength), 'blocking -> convergence'
             else if (input_par%option_iBlock>0 .and. input_par%option_blockMethod==2) then 
-                write(*,"(5x,a,':   ',a)") adjust_left('Block Method',35), 'convergence -> block'
+                write(*,"(5x,a,':   ',a)") adjust_left('Block Method',Strlength), 'convergence -> block'
             else if (input_par%option_iBlock>0 .and. input_par%option_blockMethod==3) then
-                write(*,"(5x,a,':   ',a)") adjust_left('Block Method',35), 'convergence -> block -> convergence'
+                write(*,"(5x,a,':   ',a)") adjust_left('Block Method',Strlength), 'convergence -> block -> convergence'
             end if 
         end if
         write(*,*)
