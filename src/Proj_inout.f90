@@ -212,6 +212,7 @@ subroutine write_pko_output(q1,q2)
     integer,intent(in) :: q1,q2
     call set_pko_output_filename(q1,q2,pko_option%AMPType)
     call write_kernels
+    call write_eccentricity_operators_kernels(q1,q2)
     if (pko_option%TDType==1) then
         call write_reduced_1B_transition_density_matrix_elements(q1,q2)
     end if 
@@ -454,6 +455,36 @@ subroutine  write_reduced_1B_multipole_matrix_elements
             write(outputfile%u_outputEMelem,'(2i4,1x,f17.10,8x,15(1x,f17.10))') a,b, monopole_ab,(Ql_ab(lambda), lambda=lambda_start,lambda_end)
         end do 
     end do
+end subroutine
+
+subroutine write_eccentricity_operators_kernels(q1,q2)
+    use Globals, only: kernels,constraint
+    integer :: q1,q2
+    integer :: J,K1,K2,parity
+    character(1), dimension(2) :: ParityChar = ['+', '-']
+    character(len=*), parameter ::  format1 = "(3i5,4x,a,4f5.3)", &
+                                    format2 = "(2e15.8)"
+    open(outputfile%u_outputelem,form='formatted',file=OUTPUT_PATH//'Eccentricity_operators_kernels')
+        do J = 0,0 
+            do K1 = -0,0
+                do K2 = -0,0
+                    ! In the axially symmetric case, the kernel is non-zero only when
+                    ! the parity satisfies  Pi  = (-1)^J for  N_KK, H_KK, X_KK and E0_KK
+                    ! the parity satisfies Pi_i = (-1)^J_i for  Q2_KK_12
+                    if ((-1)**J == 1) then
+                        parity = 1 ! +
+                    else
+                        parity = 2 ! -
+                    end if
+                    write(outputfile%u_outputelem,format1)  J,K1,K2,ParityChar(parity),constraint%betac(q1),constraint%bet3c(q1),constraint%betac(q2),constraint%bet3c(q2)
+                    ! ! proton part
+                    write(outputfile%u_outputelem,format2)  kernels%Eccentricity_KK(J,K1,K2,2,parity)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)
+                    ! ! neutron part
+                    write(outputfile%u_outputelem,format2)  kernels%Eccentricity_KK(J,K1,K2,1,parity)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)
+                end do
+            end do
+        end do 
+    close(outputfile%u_outputelem)
 end subroutine
 
 subroutine write_eccentricity_operators_matrix_elements_1B
