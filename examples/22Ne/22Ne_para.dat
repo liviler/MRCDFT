@@ -33,12 +33,13 @@ PNP      =  1                       ! Particle Number Projection     : (0) no (1
 Kernels  =  1                       ! Symmetry in Kernels. 0: All ; 1: Triangular Matrix ; 2: Diagonal elements only
 q1       =  1   -1                  ! Start and end indices for q1 parameters; end = -1 indicates that the end index is set to the total number of deformation parameters.
 q2       =  1   -1                  ! Start and end indices for q2 parameters; end = -1 indicates that the end index is set to the total number of deformation parameters.
-Jmax     =  4                       ! maximal spin value to be
+Jmax     =  2                       ! maximal spin value to be
 icm      =  1                       ! cent-of-mass corr. 1: average  ; 2: HO approximation
-nphi     =  5                       ! number of meshpoints in gauge angles phi (odd numbers)
+nphi     =  7                       ! number of meshpoints in gauge angles phi (odd numbers)
 EulerSym =  1                       ! Symmetry of Euler angles (alpha, beta ,gamma ). 0: no, 1: Axially, 2: D2 
 nalpha   =  1                       ! number of meshpoints in Euler angles alpha (even numbers) 
 nbeta    =  12                      ! number of meshpoints in Euler angles beta (even numbers) 
 ngamma   =  1                       ! number of meshpoints in Euler angles gamma (even numbers) 
-TDType   =  0                       ! calculate reduced transition density : (0) no (1) yes
-lambda   =  3                       ! max lambda of 1B transition density
+DsType   =  1                       ! calculate density matrix element: (0) no (1) yes
+TDType   =  1                       ! calculate reduced transition density matrix element: (0) no (1) yes
+lambda   =  2                       ! max lambda of 1B transition density
