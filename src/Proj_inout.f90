@@ -62,10 +62,12 @@ subroutine read_Proj_configuration(ifPrint)
         pko_option%AMPtype = input_par%AMPType
         if(input_par%AMPType.ne.0 .and. input_par%AMPType.ne.1 .and. input_par%AMPType.ne.2) stop 'AMPType wrong!'
         if( input_par%AMPType==2) stop '(3DAMP) Not yet verified !'
+        if(input_par%AMPtype==1 .and. mod(input_par%nbeta, 2) /= 0) stop 'nbeta must be an even number!' 
 
         ! set PNP type (0: no PNP; 1: PNP)
         pko_option%PNPtype = input_par%PNPType
         if(input_par%PNPType.ne.0 .and. input_par%PNPType.ne.1 ) stop 'PNPType wrong!'
+        if(input_par%PNPType.ne.0 .and. mod(input_par%nphi, 2) == 0) stop 'nphi must be an odd number!' 
 
         ! Kernel Symmetry  (0: All ; 1: Triangular Matrix ; 2: Diagonal elements only)
         pko_option%Kernel_Symmetry = input_par%Kernel_Symmetry
