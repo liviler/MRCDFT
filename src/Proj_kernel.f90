@@ -769,14 +769,33 @@ Module Kernel
         real(r64) :: phi_n,phi_p
         complex(r64) :: emiNphi,emiZphi,fac,pfac
         complex(r64), dimension(-2:2,2) :: Q2m,pQ2m,cQ2m,pcQ2m,Q2m_PNP,pQ2m_PNP,cQ2m_PNP,pcQ2m_PNP
-        
+        complex(r64), dimension(:,:,:), allocatable :: Q2m_array,pQ2m_array,cQ2m_array,pcQ2m_array
+
         Q2m_PNP = (0.d0, 0.d0)
         pQ2m_PNP = (0.d0, 0.d0)
         cQ2m_PNP = (0.d0, 0.d0)
         pcQ2m_PNP = (0.d0, 0.d0)
-
         L_n = projection_mesh%nphi(1)
         L_p = projection_mesh%nphi(2)
+
+        allocate(Q2m_array(max(L_n,L_p),-2:2,2),pQ2m_array(max(L_n,L_p),-2:2,2),cQ2m_array(max(L_n,L_p),-2:2,2),pcQ2m_array(max(L_n,L_p),-2:2,2))
+        do phi_n_index = 1, L_n
+            it = 1
+            call calculate_Qlm(2,phi_n_index,it,Q2m,pQ2m,cQ2m,pcQ2m)
+            Q2m_array(phi_n_index,:,it) = Q2m(:,it)
+            pQ2m_array(phi_n_index,:,it) = pQ2m(:,it)
+            cQ2m_array(phi_n_index,:,it) = cQ2m(:,it)
+            pcQ2m_array(phi_n_index,:,it) = pcQ2m(:,it)
+        end do 
+        do phi_p_index = 1, L_p
+            it = 2
+            call calculate_Qlm(2,phi_p_index,it,Q2m,pQ2m,cQ2m,pcQ2m)
+            Q2m_array(phi_p_index,:,it) = Q2m(:,it)
+            pQ2m_array(phi_p_index,:,it) = pQ2m(:,it)
+            cQ2m_array(phi_p_index,:,it) = cQ2m(:,it)
+            pcQ2m_array(phi_p_index,:,it) = pcQ2m(:,it)
+        end do 
+
         do  phi_n_index = 1, L_n
             phi_n =  phi_n_index*projection_mesh%dphi(1)
             emiNphi = cdexp(-nucleus_attributes%neutron_number*cmplx(0,phi_n)) ! e^{-iN\phi_n}
@@ -787,23 +806,22 @@ Module Kernel
                 pfac = 1.d0/(L_n*L_p)*emiNphi*emiZphi*mix%pnorm(phi_n_index,1)*mix%pnorm(phi_p_index,2)
                 ! Q2: l=2
                 it = 1 
-                call calculate_Qlm(2,phi_n_index,it,Q2m,pQ2m,cQ2m,pcQ2m)
                 do m = -2, 2
-                    Q2m_PNP(m,it) = Q2m_PNP(m,it) + fac*Q2m(m,it)
-                    pQ2m_PNP(m,it) = pQ2m_PNP(m,it) + pfac*pQ2m(m,it)
-                    cQ2m_PNP(m,it) = cQ2m_PNP(m,it) + fac*cQ2m(m,it)
-                    pcQ2m_PNP(m,it) = pcQ2m_PNP(m,it) + pfac*pcQ2m(m,it)
+                    Q2m_PNP(m,it) = Q2m_PNP(m,it) + fac*Q2m_array(phi_n_index,m,it)
+                    pQ2m_PNP(m,it) = pQ2m_PNP(m,it) + pfac*pQ2m_array(phi_n_index,m,it)
+                    cQ2m_PNP(m,it) = cQ2m_PNP(m,it) + fac*cQ2m_array(phi_n_index,m,it)
+                    pcQ2m_PNP(m,it) = pcQ2m_PNP(m,it) + pfac*pcQ2m_array(phi_n_index,m,it)
                 end do 
                 it = 2
-                call calculate_Qlm(2,phi_p_index,it,Q2m,pQ2m,cQ2m,pcQ2m)
                 do m = -2, 2
-                    Q2m_PNP(m,it) = Q2m_PNP(m,it) + fac*Q2m(m,it)
-                    pQ2m_PNP(m,it) = pQ2m_PNP(m,it) + pfac*pQ2m(m,it)
-                    cQ2m_PNP(m,it) = cQ2m_PNP(m,it) + fac*cQ2m(m,it)
-                    pcQ2m_PNP(m,it) = pcQ2m_PNP(m,it) + pfac*pcQ2m(m,it)
+                    Q2m_PNP(m,it) = Q2m_PNP(m,it) + fac*Q2m_array(phi_p_index,m,it)
+                    pQ2m_PNP(m,it) = pQ2m_PNP(m,it) + pfac*pQ2m_array(phi_p_index,m,it)
+                    cQ2m_PNP(m,it) = cQ2m_PNP(m,it) + fac*cQ2m_array(phi_p_index,m,it)
+                    pcQ2m_PNP(m,it) = pcQ2m_PNP(m,it) + pfac*pcQ2m_array(phi_p_index,m,it)
                 end do
             end do
         end do
+        deallocate(Q2m_array,pQ2m_array,cQ2m_array,pcQ2m_array)
     end subroutine
 
     subroutine calculate_r2_after_PNP(r2_PNP, pr2_PNP)
@@ -814,14 +832,33 @@ Module Kernel
 
         use Globals, only: projection_mesh,nucleus_attributes,mix
         use EM, only: calculate_r2
-        integer :: L_n,L_p,phi_n_index, phi_p_index,it
+        integer :: L_n,L_p,phi_n_index,phi_p_index,it
         real(r64) :: phi_n,phi_p
         complex(r64) :: emiNphi,emiZphi,fac,pfac
         complex(r64) :: r2,pr2,r2_PNP(2),pr2_PNP(2)
+        complex(r64), dimension(:,:), allocatable :: r2_arry, pr2_arry
+
         r2_PNP = (0.d0, 0.d0)
         pr2_PNP = (0.d0, 0.d0)
         L_n = projection_mesh%nphi(1)
         L_p = projection_mesh%nphi(2)
+
+        allocate(r2_arry(max(L_n,L_p),2),pr2_arry(max(L_n,L_p),2))
+        do phi_n_index = 1, L_n
+            it = 1
+            ! call calculate_r2(phi_n_index,it,r2,pr2)
+            r2 = 0.d0
+            pr2 = 0.d0
+            r2_arry(phi_n_index,it) = r2
+            pr2_arry(phi_n_index,it) = pr2
+        end do 
+        do phi_p_index = 1, L_p
+            it = 2
+            call calculate_r2(phi_p_index,it,r2,pr2)
+            r2_arry(phi_p_index,it) = r2
+            pr2_arry(phi_p_index,it) = pr2
+        end do 
+
         do  phi_n_index = 1, L_n
             phi_n =  phi_n_index*projection_mesh%dphi(1)
             emiNphi = cdexp(-nucleus_attributes%neutron_number*cmplx(0,phi_n)) ! e^{-iN\phi_n}
@@ -832,14 +869,14 @@ Module Kernel
                 pfac = 1.d0/(L_n*L_p)*emiNphi*emiZphi*mix%pnorm(phi_n_index,1)*mix%pnorm(phi_p_index,2)
                 !
                 it = 1
-                r2_PNP(it) = r2_PNP(it) + fac*0.d0
-                pr2_PNP(it) = pr2_PNP(it) + pfac*0.d0
+                r2_PNP(it) = r2_PNP(it) + fac*r2_arry(phi_n_index,it)
+                pr2_PNP(it) = pr2_PNP(it) + pfac*pr2_arry(phi_n_index,it)
                 it= 2
-                call calculate_r2(phi_p_index,it,r2,pr2)
-                r2_PNP(it) = r2_PNP(it) + fac*r2
-                pr2_PNP(it) = pr2_PNP(it) + pfac*pr2
+                r2_PNP(it) = r2_PNP(it) + fac*r2_arry(phi_p_index,it)
+                pr2_PNP(it) = pr2_PNP(it) + pfac*pr2_arry(phi_p_index,it)
             end do
         end do
+        deallocate(r2_arry,pr2_arry)
     end subroutine
 
     subroutine calculate_Eccentricity_after_PNP(Eccentri_PNP,pEccentri_PNP)
@@ -850,14 +887,31 @@ Module Kernel
 
         use Globals, only: projection_mesh,nucleus_attributes,mix
         use Eccentricity, only: calculate_Eccentri_n
-        integer :: L_n,L_p,phi_n_index, phi_p_index,it
+        integer :: L_n,L_p,phi_n_index,phi_p_index,it
         real(r64) :: phi_n,phi_p
         complex(r64) :: emiNphi,emiZphi,fac,pfac
         complex(r64) :: Eccentri,pEccentri,Eccentri_PNP(2),pEccentri_PNP(2)
+        complex(r64), dimension(:,:),allocatable :: Eccentri_arry, pEccentri_arry
+
         Eccentri_PNP = (0.d0, 0.d0)
         pEccentri_PNP = (0.d0, 0.d0)
         L_n = projection_mesh%nphi(1)
         L_p = projection_mesh%nphi(2)
+
+        allocate(Eccentri_arry(max(L_n,L_p),2),pEccentri_arry(max(L_n,L_p),2))
+        do phi_n_index = 1, L_n
+            it = 1
+            call calculate_Eccentri_n(2,phi_n_index,it,Eccentri,pEccentri)
+            Eccentri_arry(phi_n_index,it) = Eccentri
+            pEccentri_arry(phi_n_index,it) = pEccentri
+        end do 
+        do phi_p_index = 1, L_p
+            it = 2
+            call calculate_Eccentri_n(2,phi_p_index,it,Eccentri,pEccentri)
+            Eccentri_arry(phi_p_index,it) = Eccentri
+            pEccentri_arry(phi_p_index,it) = pEccentri
+        end do 
+
         do  phi_n_index = 1, L_n
             phi_n =  phi_n_index*projection_mesh%dphi(1)
             emiNphi = cdexp(-nucleus_attributes%neutron_number*cmplx(0,phi_n)) ! e^{-iN\phi_n}
@@ -868,14 +922,13 @@ Module Kernel
                 pfac = 1.d0/(L_n*L_p)*emiNphi*emiZphi*mix%pnorm(phi_n_index,1)*mix%pnorm(phi_p_index,2)
                 !
                 it = 1
-                call calculate_Eccentri_n(2,phi_n_index,it,Eccentri,pEccentri)
-                Eccentri_PNP(it) = Eccentri_PNP(it) + fac*Eccentri
-                pEccentri_PNP(it) = pEccentri_PNP(it) + pfac*pEccentri
+                Eccentri_PNP(it) = Eccentri_PNP(it) + fac*Eccentri_arry(phi_n_index,it)
+                pEccentri_PNP(it) = pEccentri_PNP(it) + pfac*pEccentri_arry(phi_n_index,it)
                 it= 2
-                call calculate_Eccentri_n(2,phi_p_index,it,Eccentri,pEccentri)
-                Eccentri_PNP(it) = Eccentri_PNP(it) + fac*Eccentri
-                pEccentri_PNP(it) = pEccentri_PNP(it) + pfac*pEccentri
+                Eccentri_PNP(it) = Eccentri_PNP(it) + fac*Eccentri_arry(phi_p_index,it)
+                pEccentri_PNP(it) = pEccentri_PNP(it) + pfac*pEccentri_arry(phi_p_index,it)
             end do
         end do
+        deallocate(Eccentri_arry,pEccentri_arry)
     end subroutine
 END MODULE Kernel
