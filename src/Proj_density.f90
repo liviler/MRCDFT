@@ -179,7 +179,7 @@ contains
         !$OMP w,fac1,fac2,cpi,fac_AMP,L_n,L_p,phi_n_index,phi_p_index,phi_n,phi_p,emiNphi,emiZphi, &
         !$OMP fac_PNP,norm,pnorm,it,local_ME1B) 
         local_ME1B = (0.d0, 0.d0) 
-        !$OMP DO COLLAPSE(3) SCHEDULE(dynamic)
+        !$OMP DO COLLAPSE(3) SCHEDULE(static)
         do ialpha = 1, projection_mesh%nalpha
             do ibeta = 1, projection_mesh%nbeta
                 do igamma = 1, projection_mesh%ngamma
@@ -276,7 +276,7 @@ contains
         !$OMP w,fac1,fac2,cpi,fac_AMP,L_n,L_p,phi_n_index,phi_p_index,phi_n,phi_p,emiNphi,emiZphi, &
         !$OMP fac_PNP,norm,pnorm,it,local_ME2B)
         local_ME2B = (0.d0, 0.d0)
-        !$OMP DO COLLAPSE(3) SCHEDULE(dynamic)
+        !$OMP DO COLLAPSE(3) SCHEDULE(static)
         do ialpha = 1, projection_mesh%nalpha
             do ibeta = 1, projection_mesh%nbeta
                 do igamma = 1, projection_mesh%ngamma

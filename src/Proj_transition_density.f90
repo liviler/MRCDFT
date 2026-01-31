@@ -199,7 +199,7 @@ Module TD
         !$OMP fac_PNP,m1,nma,m2,nmb,norm,pnorm,fac,it,nu,local_reduced_TDME1B,local_reduced_TDME1B_c) 
         local_reduced_TDME1B = (0.d0, 0.d0) 
         local_reduced_TDME1B_c = (0.d0, 0.d0)
-        !$OMP DO COLLAPSE(4) SCHEDULE(dynamic)
+        !$OMP DO COLLAPSE(4) SCHEDULE(static)
         do mu = -lambda,lambda
             do ialpha = 1, projection_mesh%nalpha
                 do ibeta = 1, projection_mesh%nbeta
