@@ -135,7 +135,6 @@ contains
                                         ! ! proton
                                         ! Proj_densities%ME2B(J,K1,K2,iParity,2,ifg1,m1,m2,m3,m4) = Real(ME2B(2))
                                         ! check particle number
-                                        if ( .not. (ifg1==ifg3 .and. m1==m3 .and. ifg2==ifg4 .and. m2==m4))  cycle
                                         if ((ifg1==ifg3 .and. m1==m3) .and. (ifg2==ifg4 .and. m2==m4))  then
                                             call calculate_two_body_density_matrix_element(J,K1,K2,Parity,ifg1,m1,ifg2,m2,ifg3,m3,ifg4,m4,ME2B)
                                             N2(1) = N2(1) + ME2B(1)
