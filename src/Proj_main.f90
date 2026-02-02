@@ -43,7 +43,7 @@ contains
                 call read_wavefuntion_files(q1,q2)
                 call determine_truncated_dimension
                 call calculate_Kernel
-                if (pko_option%DsType == 1) then
+                if (pko_option%DsType > 0) then
                     call calculate_density_matrix_element(q1,q2)
                 end if 
                 if (pko_option%TDType == 1) then

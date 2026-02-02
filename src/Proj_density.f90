@@ -110,40 +110,43 @@ contains
                         do m1 = 1, BS%HO_sph%idsp(1,ifg1)
                             do ifg2 = 1, 2
                             do m2 = 1, BS%HO_sph%idsp(1,ifg2)
-                                ! 1 Body
-                                if(ifg1==ifg2) then
-                                    call calculate_one_body_density_matrix_element(J,K1,K2,Parity,ifg1,m1,ifg2,m2,ME1B)
-                                    ! neutron
-                                    Proj_densities%ME1B(J,K1,K2,iParity,1,ifg1,m1,m2) = Real(ME1B(1))
-                                    ! proton
-                                    Proj_densities%ME1B(J,K1,K2,iParity,2,ifg1,m1,m2) = Real(ME1B(2))
-                                    ! check particle number
-                                    if (ifg1==ifg2 .and. m1==m2) then
-                                        N(1) = N(1) + Proj_densities%ME1B(J,K1,K2,iParity,1,ifg1,m1,m2)
-                                        N(2) = N(2) + Proj_densities%ME1B(J,K1,K2,iParity,2,ifg1,m1,m2)
+                                if(pko_option%DsType == 1 .or. pko_option%DsType == 3) then 
+                                    ! 1 Body
+                                    if(ifg1==ifg2) then
+                                        call calculate_one_body_density_matrix_element(J,K1,K2,Parity,ifg1,m1,ifg2,m2,ME1B)
+                                        ! neutron
+                                        Proj_densities%ME1B(J,K1,K2,iParity,1,ifg1,m1,m2) = Real(ME1B(1))
+                                        ! proton
+                                        Proj_densities%ME1B(J,K1,K2,iParity,2,ifg1,m1,m2) = Real(ME1B(2))
+                                        ! check particle number
+                                        if (ifg1==ifg2 .and. m1==m2) then
+                                            N(1) = N(1) + Proj_densities%ME1B(J,K1,K2,iParity,1,ifg1,m1,m2)
+                                            N(2) = N(2) + Proj_densities%ME1B(J,K1,K2,iParity,2,ifg1,m1,m2)
+                                        end if
                                     end if
                                 end if
-
-                                do ifg3 = 1, 2
-                                do m3 = 1, BS%HO_sph%idsp(1,ifg3)
-                                    do ifg4 = 1, 2
-                                    do m4 = 1, BS%HO_sph%idsp(1,ifg4)
-                                        ! 2 Body
-                                        ! call calculate_two_body_density_matrix_element(J,K1,K2,Parity,ifg1,m1,ifg2,m2,ifg3,m3,ifg4,m4,ME2B)
-                                        ! ! neutron
-                                        ! Proj_densities%ME2B(J,K1,K2,iParity,1,ifg1,m1,m2,m3,m4) = Real(ME2B(1))
-                                        ! ! proton
-                                        ! Proj_densities%ME2B(J,K1,K2,iParity,2,ifg1,m1,m2,m3,m4) = Real(ME2B(2))
-                                        ! check particle number
-                                        if ((ifg1==ifg3 .and. m1==m3) .and. (ifg2==ifg4 .and. m2==m4))  then
-                                            call calculate_two_body_density_matrix_element(J,K1,K2,Parity,ifg1,m1,ifg2,m2,ifg3,m3,ifg4,m4,ME2B)
-                                            N2(1) = N2(1) + ME2B(1)
-                                            N2(2) = N2(2) + ME2B(2)
-                                        end if 
-                                    end do 
+                                if(pko_option%DsType == 2 .or. pko_option%DsType == 3) then
+                                    do ifg3 = 1, 2
+                                    do m3 = 1, BS%HO_sph%idsp(1,ifg3)
+                                        do ifg4 = 1, 2
+                                        do m4 = 1, BS%HO_sph%idsp(1,ifg4)
+                                            ! 2 Body
+                                            ! call calculate_two_body_density_matrix_element(J,K1,K2,Parity,ifg1,m1,ifg2,m2,ifg3,m3,ifg4,m4,ME2B)
+                                            ! ! neutron
+                                            ! Proj_densities%ME2B(J,K1,K2,iParity,1,ifg1,m1,m2,m3,m4) = Real(ME2B(1))
+                                            ! ! proton
+                                            ! Proj_densities%ME2B(J,K1,K2,iParity,2,ifg1,m1,m2,m3,m4) = Real(ME2B(2))
+                                            ! check particle number
+                                            if ((ifg1==ifg3 .and. m1==m3) .and. (ifg2==ifg4 .and. m2==m4))  then
+                                                call calculate_two_body_density_matrix_element(J,K1,K2,Parity,ifg1,m1,ifg2,m2,ifg3,m3,ifg4,m4,ME2B)
+                                                N2(1) = N2(1) + ME2B(1)
+                                                N2(2) = N2(2) + ME2B(2)
+                                            end if 
+                                        end do 
+                                        end do
                                     end do
-                                end do
-                                end do 
+                                    end do 
+                                end if 
                             end do
                             end do
                         end do 
