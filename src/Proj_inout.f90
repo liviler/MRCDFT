@@ -226,16 +226,24 @@ end subroutine
 
 subroutine write_pko_output(q1,q2)
     use Globals, only: gcm_space,pko_option
+    use Eccentricity, only: calculate_Eccentricity_kernel_by_density_matrix_element
     integer,intent(in) :: q1,q2
     call set_pko_output_filename(q1,q2,pko_option%AMPType)
     call write_kernels
+    
+    if(.False.) then
+        call calculate_Eccentricity_kernel_by_density_matrix_element
+    end if 
     call write_eccentricity_operators_kernels(q1,q2)
+
     if (pko_option%DsType > 0 )then
         if (pko_option%DsType==1 .or. pko_option%DsType==3) call write_1B_density_matrix_elements
     end if 
+
     if (pko_option%TDType==1) then
         call write_reduced_1B_transition_density_matrix_elements(q1,q2)
     end if 
+
     if(q1== gcm_space%q1_start .and. q2==gcm_space%q2_start) then 
         call write_reduced_1B_multipole_matrix_elements
         call write_eccentricity_operators_matrix_elements_1B
@@ -388,6 +396,12 @@ subroutine write_eccentricity_operators_kernels(q1,q2)
                     write(outputfile%u_outputelem,format2)  kernels%Eccentricity_KK(J,K1,K2,2,parity)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)
                     ! ! neutron part
                     write(outputfile%u_outputelem,format2)  kernels%Eccentricity_KK(J,K1,K2,1,parity)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)
+
+                    write(outputfile%u_outputelem,*) "By Density:"
+                    ! ! proton part
+                    write(outputfile%u_outputelem,format2)  kernels%Eccentricity_KK_byDensity(J,K1,K2,2,parity)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)
+                    ! ! neutron part
+                    write(outputfile%u_outputelem,format2)  kernels%Eccentricity_KK_byDensity(J,K1,K2,1,parity)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)
                 end do
             end do
         end do 
@@ -501,10 +515,12 @@ end subroutine
 subroutine  write_reduced_1B_multipole_matrix_elements
     use Globals, only: outputfile,BS,TDs,gcm_space
     use EM, only: reduced_multipole_matrix_elements,reduced_monopole_matrix_elements,rl_nl
+    use TD, only: set_nlj_mapping
     integer :: ifg,lambda_start,lambda_end,lambda,a,b,i0sp,a_index,nra,nla,nja,b_index,nrb,nlb,njb
     real(r64),allocatable,dimension(:) :: Ql_ab
     real(r64) :: monopole_ab
     character(len=200) :: header, temp
+    call set_nlj_mapping
     open(outputfile%u_outputEMelem ,form='formatted',file=outputfile%outputEMelem)
     ! store the nlj of a/b
     write(outputfile%u_outputEMelem,*) "--------------------------------------------------------"
@@ -564,7 +580,7 @@ subroutine write_eccentricity_operators_matrix_elements_1B
     integer :: ifg,ndsp,i0sp,m1,m2,nr1,nl1,nj1,nm1,nr2,nl2,nj2,nm2
     real(r64) :: fn, e_1B
     open(outputfile%u_outputEccentricityelem ,form='formatted',file=outputfile%outputEccentricityelem)
-    write(outputfile%u_outputEccentricityelem,*) "  ifg index1 index2   n1   n2   l1   l2  2j1  2j2  2m1  2m2      f2     Eps1B" 
+    write(outputfile%u_outputEccentricityelem,*) "  ifg   m1   m2   n1   n2   l1   l2  2j1  2j2  2j_m1  2j_m2      f2     Eps1B" 
     do ifg = 1, 2
         ndsp = BS%HO_sph%idsp(1,ifg)
         i0sp = BS%HO_sph%iasp(1,ifg)
@@ -582,7 +598,7 @@ subroutine write_eccentricity_operators_matrix_elements_1B
                 
                 fn = f_n(ifg,m1,ifg,m2,2)
                 call eccentricity_matrix_element_one_body(ifg,m1,ifg,m2,2,e_1B)
-                write(outputfile%u_outputEccentricityelem,"(i5,2i7,8i5,1x,2f10.5)") ifg,m1,m2,nr1,nr2,nl1,nl2,2*nj1-1,2*nj2-1,2*nm1-1,2*nm2-1,fn,e_1B
+                write(outputfile%u_outputEccentricityelem,"(9i5,2i7,1x,2f10.5)") ifg,m1,m2,nr1,nr2,nl1,nl2,2*nj1-1,2*nj2-1,2*nm1-1,2*nm2-1,fn,e_1B
             end do 
         end do 
     end do
