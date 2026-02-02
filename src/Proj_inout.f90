@@ -104,8 +104,10 @@ subroutine read_Proj_configuration(ifPrint)
 
         ! set calculate density matrix element option
         pko_option%DsType = input_par%DsType
+        if(pko_option%DsType<0 .or. pko_option%DsType>3) stop "DsType should be 0 or 1 or 2 or 3"
         ! set TD type
         pko_option%TDType = input_par%TDType
+        if(pko_option%TDType<0 .or. pko_option%TDType>1) stop "TDType should be 0 or 1"
         TDs%lambda_max = input_par%lambda_max ! max lambda of 1B transition density
     end subroutine
     subroutine printParameters
@@ -152,13 +154,15 @@ subroutine read_Proj_configuration(ifPrint)
 
         write(*,"(5x,a,':   ',i3)") adjust_left('Maximal J value',Strlength), gcm_space%Jmax
         if (pko_option%DsType /=0 ) then
-            write(*,"(5x,a,':   ',a)") adjust_left('calculate density ME',Strlength),'Yes'
+            if(pko_option%DsType==1) write(*,"(5x,a,':   ',a)") adjust_left('calculate density ME',Strlength),'1B'
+            if(pko_option%DsType==2) write(*,"(5x,a,':   ',a)") adjust_left('calculate density ME',Strlength),'2B'
+            if(pko_option%DsType==3) write(*,"(5x,a,':   ',a)") adjust_left('calculate density ME',Strlength),'1B + 2B'
         else 
             write(*,"(5x,a,':   ',a)") adjust_left('calculate density ME',Strlength),'No'
         end if 
 
         if (pko_option%TDType /=0 ) then
-            write(*,"(5x,a,':   ',a)") adjust_left('Calculate reduced transition density ME',Strlength),'Yes'
+            if(pko_option%TDType==1)write(*,"(5x,a,':   ',a)") adjust_left('Calculate reduced transition density ME',Strlength),'1B'
             write(*,"(5x,a,':   ',i3)") adjust_left('Maximal lambda value(1BTD)',Strlength),TDs%lambda_max
         else 
             write(*,"(5x,a,':   ',a)") adjust_left('Calculate reduced transition density ME',Strlength),'No'
@@ -226,6 +230,9 @@ subroutine write_pko_output(q1,q2)
     call set_pko_output_filename(q1,q2,pko_option%AMPType)
     call write_kernels
     call write_eccentricity_operators_kernels(q1,q2)
+    if (pko_option%DsType > 0 )then
+        if (pko_option%DsType==1 .or. pko_option%DsType==3) call write_1B_density_matrix_elements
+    end if 
     if (pko_option%TDType==1) then
         call write_reduced_1B_transition_density_matrix_elements(q1,q2)
     end if 
@@ -313,6 +320,15 @@ subroutine set_pko_output_filename(q1,q2,AMPType)
                         //'_eMax'//char(name_nf1)//char(name_nf2)//'.elem'       
     outputfile%outputEccentricityelem = OUTPUT_PATH//'Eccentricity'//'_A'//int2str(A) &
                         //'_eMax'//char(name_nf1)//char(name_nf2)//'.elem'
+    outputfile%outputDsME1B = OUTPUT_PATH//'Ds1B.'//char(AMP)//'D' &
+                        //'_eMax'//char(name_nf1)//char(name_nf2) &
+                        //'.'//char(nphi_1)//char(nphi_2) &
+                        //'.'//char(nbeta_1)//char(nbeta_2) &
+                        //signb21//char(name1(1))//char(name1(2))//char(name1(3)) &
+                        //signb31//char(name1(4))//char(name1(5))//char(name1(6)) &
+                        //'_'//signb22//char(name2(1))//char(name2(2))//char(name2(3)) &
+                        //signb32//char(name2(4))//char(name2(5))//char(name2(6))//'.dens'
+
 end subroutine
 
 subroutine write_kernels
@@ -346,6 +362,78 @@ subroutine write_kernels
             end do
         end do 
     close(outputfile%u_outputelem)
+end subroutine
+
+subroutine write_eccentricity_operators_kernels(q1,q2)
+    use Globals, only: kernels,constraint
+    integer :: q1,q2
+    integer :: J,K1,K2,parity
+    character(1), dimension(2) :: ParityChar = ['+', '-']
+    character(len=*), parameter ::  format1 = "(3i5,4x,a,4(4x,f5.3))", &
+                                    format2 = "(2e15.8)"
+    open(outputfile%u_outputelem,form='formatted',file=OUTPUT_PATH//'Eccentricity_operators_kernels.elem')
+        do J = 0,0 
+            do K1 = -0,0
+                do K2 = -0,0
+                    ! In the axially symmetric case, the kernel is non-zero only when
+                    ! the parity satisfies  Pi  = (-1)^J for  N_KK, H_KK, X_KK and E0_KK
+                    ! the parity satisfies Pi_i = (-1)^J_i for  Q2_KK_12
+                    if ((-1)**J == 1) then
+                        parity = 1 ! +
+                    else
+                        parity = 2 ! -
+                    end if
+                    write(outputfile%u_outputelem,format1)  J,K1,K2,ParityChar(parity),constraint%betac(q1),constraint%bet3c(q1),constraint%betac(q2),constraint%bet3c(q2)
+                    ! ! proton part
+                    write(outputfile%u_outputelem,format2)  kernels%Eccentricity_KK(J,K1,K2,2,parity)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)
+                    ! ! neutron part
+                    write(outputfile%u_outputelem,format2)  kernels%Eccentricity_KK(J,K1,K2,1,parity)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)
+                end do
+            end do
+        end do 
+    close(outputfile%u_outputelem)
+end subroutine
+
+subroutine write_1B_density_matrix_elements
+    use Globals, only: gcm_space,pko_option,BS,outputfile,Proj_densities
+    integer :: J,K1_start,K1_end,K2_start,K2_end,K1,K2,iParity,Parity,ifg,m1,m2
+    character(1), dimension(2) :: ParityChar = ['+', '-']
+    character(1) :: Parity_c
+    open(outputfile%u_outputDsME1B,form='formatted',file=outputfile%outputDsME1B)
+    write(outputfile%u_outputDsME1B,*) "Pi   J  K1  K2  ifg  m1   m2    neutron            proton"
+    do J = gcm_space%Jmin, gcm_space%Jmax, gcm_space%Jstep
+        if(pko_option%AMPtype==0 .or. pko_option%AMPtype==1) then
+            K1_start = 0
+            K1_end = 0
+            K2_start = 0
+            K2_end = 0
+        else
+            K1_start = -J
+            K1_end = J
+            K2_start = -J
+            K2_end = J
+        end if
+        do K1 = K1_start, K1_end
+            do K2 = K2_start, K2_end
+                do iParity = 1, 2
+                    Parity = (-1)**(iParity+1) ! 1: +1 , 2: -1
+                    Parity_c = ParityChar(iParity)
+                    if( Parity /= (-1)**J) cycle
+                    do ifg = 1, 2
+                    do m1 = 1, BS%HO_sph%idsp(1,ifg)
+                        do m2 = 1, BS%HO_sph%idsp(1,ifg)
+                        ! 1 Body
+                        write(outputfile%u_outputDsME1B,"(1x,a1,6i4,2x,2f18.14)")Parity_c,J,K1,K2,ifg,m1,m2,&
+                                    Real(Proj_densities%ME1B(J,K1,K2,iParity,1,ifg,m1,m2)),&
+                                    Real(Proj_densities%ME1B(J,K1,K2,iParity,2,ifg,m1,m2))
+                        end do
+                    end do
+                    end do 
+                end do 
+            end do 
+        end do 
+    end do
+    close(outputfile%u_outputDsME1B)
 end subroutine
 
 subroutine write_reduced_1B_transition_density_matrix_elements(q1,q2)
@@ -470,43 +558,13 @@ subroutine  write_reduced_1B_multipole_matrix_elements
     end do
 end subroutine
 
-subroutine write_eccentricity_operators_kernels(q1,q2)
-    use Globals, only: kernels,constraint
-    integer :: q1,q2
-    integer :: J,K1,K2,parity
-    character(1), dimension(2) :: ParityChar = ['+', '-']
-    character(len=*), parameter ::  format1 = "(3i5,4x,a,4(4x,f5.3))", &
-                                    format2 = "(2e15.8)"
-    open(outputfile%u_outputelem,form='formatted',file=OUTPUT_PATH//'Eccentricity_operators_kernels.elem')
-        do J = 0,0 
-            do K1 = -0,0
-                do K2 = -0,0
-                    ! In the axially symmetric case, the kernel is non-zero only when
-                    ! the parity satisfies  Pi  = (-1)^J for  N_KK, H_KK, X_KK and E0_KK
-                    ! the parity satisfies Pi_i = (-1)^J_i for  Q2_KK_12
-                    if ((-1)**J == 1) then
-                        parity = 1 ! +
-                    else
-                        parity = 2 ! -
-                    end if
-                    write(outputfile%u_outputelem,format1)  J,K1,K2,ParityChar(parity),constraint%betac(q1),constraint%bet3c(q1),constraint%betac(q2),constraint%bet3c(q2)
-                    ! ! proton part
-                    write(outputfile%u_outputelem,format2)  kernels%Eccentricity_KK(J,K1,K2,2,parity)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)
-                    ! ! neutron part
-                    write(outputfile%u_outputelem,format2)  kernels%Eccentricity_KK(J,K1,K2,1,parity)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)
-                end do
-            end do
-        end do 
-    close(outputfile%u_outputelem)
-end subroutine
-
 subroutine write_eccentricity_operators_matrix_elements_1B
     use Globals, only: BS, outputfile
     use Eccentricity, only: f_n,eccentricity_matrix_element_one_body
     integer :: ifg,ndsp,i0sp,m1,m2,nr1,nl1,nj1,nm1,nr2,nl2,nj2,nm2
     real(r64) :: fn, e_1B
     open(outputfile%u_outputEccentricityelem ,form='formatted',file=outputfile%outputEccentricityelem)
-    write(outputfile%u_outputEccentricityelem,*) "  ifg   n1   n2   l1   l2  2j1  2j2  2m1  2m2      f2     Eps1B" 
+    write(outputfile%u_outputEccentricityelem,*) "  ifg index1 index2   n1   n2   l1   l2  2j1  2j2  2m1  2m2      f2     Eps1B" 
     do ifg = 1, 2
         ndsp = BS%HO_sph%idsp(1,ifg)
         i0sp = BS%HO_sph%iasp(1,ifg)
@@ -521,11 +579,13 @@ subroutine write_eccentricity_operators_matrix_elements_1B
                 nl2 = BS%HO_sph%nljm(i0sp+m2,2)
                 nj2 = BS%HO_sph%nljm(i0sp+m2,3)
                 nm2 = BS%HO_sph%nljm(i0sp+m2,4)
-                fn = f_n(nr1,nl1,nj1,nm1,nr2,nl2,nj2,nm2,2)
-                call eccentricity_matrix_element_one_body(ifg,m1,m2,2,e_1B)
-                write(outputfile%u_outputEccentricityelem,"(9i5,1x,2f10.5)") ifg,nr1,nr2,nl1,nl2,2*nj1-1,2*nj2-1,2*nm1-1,2*nm2-1,fn,e_1B
+                
+                fn = f_n(ifg,m1,ifg,m2,2)
+                call eccentricity_matrix_element_one_body(ifg,m1,ifg,m2,2,e_1B)
+                write(outputfile%u_outputEccentricityelem,"(i5,2i7,8i5,1x,2f10.5)") ifg,m1,m2,nr1,nr2,nl1,nl2,2*nj1-1,2*nj2-1,2*nm1-1,2*nm2-1,fn,e_1B
             end do 
         end do 
     end do
 end subroutine
+
 END MODULE Proj_Inout
