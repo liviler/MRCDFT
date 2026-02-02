@@ -25,7 +25,6 @@ contains
             if(n>max_n) then 
                 write(*,*) 'Warning: max_n is small than input n ! f_n will not be precomputed.'
             else 
-                write(*,*) 'f_n will be precomputed !'
                 call precompute_f_n(n)
                 call precompute_f_n(-n)
             end if
@@ -192,4 +191,75 @@ contains
         end if 
     end function
     
+    subroutine  calculate_Eccentricity_kernel_by_density_matrix_element
+        !-------------------------------------------------------------------------------------------
+        !   <J   K_1 q_1 Pi  | E_n |J   K_2 q_2 Pi>
+        ! = \sum_{m1 m2} e_{m1 m2} \rho_{m2 m1}
+        !  + \sum_{m1 m2 m3 m4} e_{m1 m2 m3 m4} \rho_{m4 m3 m2 m1}
+        ! where e_{m1 m2} = \sum_m f^n_{m1 m} f^{-n}_{m m2}
+        !       e_{m1 m2 m3 m4} = - f^n_{m1 m3}f^{-n}_{m2 m4}
+        !       \rho_{m2 m1} = <q1|c^+_{m2}c_{m1} P^{J}_{K1 K2} P^N P^Z P^{Pi}|q2>
+        !      \rho_{m4 m3 m2 m1} = <q1|c^+_{m1}c^+_{m2}c_{m3}c_{m4} P^{J}_{K1 K2}P^N P^Z P^{Pi}|q2>
+        !-------------------------------------------------------------------------------------------
+        use Globals, only: gcm_space,pko_option,BS,kernels
+        use Proj_Density, only: calculate_one_body_density_matrix_element,calculate_two_body_density_matrix_element
+        integer :: J,K1_start,K1_end,K2_start,K2_end,K1,K2,iParity,Parity,ifg1,m1,ifg2,m2,ifg3,m3,ifg4,m4
+        complex(r64) :: ME1B(2),ME2B(2),Eccentricity_1B(2),Eccentricity_2B(2)
+        real(r64) :: e_1B,e_2B 
+        write(*,'(5x,A)') 'calculate_Eccentricity_kernel_by_density_matrix_element ... '
+        Eccentricity_1B = (0.d0,0.d0)
+        Eccentricity_2B = (0.d0,0.d0)
+        do J = gcm_space%Jmin, gcm_space%Jmax, gcm_space%Jstep
+            if(pko_option%AMPtype==0 .or. pko_option%AMPtype==1) then
+                K1_start = 0
+                K1_end = 0
+                K2_start = 0
+                K2_end = 0
+            else
+                K1_start = -J
+                K1_end = J
+                K2_start = -J
+                K2_end = J
+            end if
+            do K1 = K1_start, K1_end
+                do K2 = K2_start, K2_end
+                    do iParity = 1, 2
+                        Parity = (-1)**(iParity+1) ! 1: +1 , 2: -1
+                        if( Parity /= (-1)**J) cycle
+                        do ifg1 = 1, 2
+                        do m1 = 1, BS%HO_sph%idsp(1,ifg1)
+                            do ifg2 = 1, 2
+                            do m2 = 1, BS%HO_sph%idsp(1,ifg2)
+                                ! 1 Body
+                                if(ifg1==ifg2) then
+                                    call eccentricity_matrix_element_one_body(ifg1,m1,ifg2,m2,2,e_1B) ! e_{m1 m2}
+                                    call calculate_one_body_density_matrix_element(J,K1,K2,Parity,ifg2,m2,ifg1,m1,ME1B) ! rho_{m2 m1}
+                                    Eccentricity_1B(1) = Eccentricity_1B(1) +  e_1B*ME1B(1)
+                                    Eccentricity_1B(2) = Eccentricity_1B(2) +  e_1B*ME1B(2)
+                                end if  
+                                do ifg3 = 1, 2
+                                do m3 = 1, BS%HO_sph%idsp(1,ifg3)
+                                    do ifg4 = 1, 2
+                                    do m4 = 1, BS%HO_sph%idsp(1,ifg4)
+                                        ! 2 Body
+                                        call eccentricity_matrix_element_two_body(ifg1,m1,ifg2,m2,ifg3,m3,ifg4,m4,2,e_2B) ! e_{m1 m2 m3 m4}: - f^n_{m1 m3}f^{-n}_{m2 m4}
+                                        call calculate_two_body_density_matrix_element(J,K1,K2,Parity,ifg4,m4,ifg3,m3,ifg2,m2,ifg1,m1,ME2B) !  rho_{m4 m3 m2 m1}: <c^+_{m1}c^+_{m2}c_{m3}c_{m4}>
+                                        Eccentricity_2B(1) = Eccentricity_2B(1) +  e_2B*ME2B(1) ! e_{m1 m2 m3 m4} * <m1 m2 m3 m4> = e_{m1 m2 m3 m4} * rho_{m4 m3 m2 m1}
+                                        Eccentricity_2B(2) = Eccentricity_2B(2) +  e_2B*ME2B(2)
+                                    end do 
+                                    end do
+                                end do
+                                end do 
+                            end do
+                            end do
+                        end do 
+                        end do
+                        kernels%Eccentricity_KK_byDensity(J,K1,K2,1,iParity) =  Eccentricity_1B(1) + Eccentricity_2B(1)
+                        kernels%Eccentricity_KK_byDensity(J,K1,K2,2,iParity) =  Eccentricity_1B(2) + Eccentricity_2B(2)
+                    end do 
+                end do 
+            end do 
+        end do
+    end subroutine
+
 end Module Eccentricity
