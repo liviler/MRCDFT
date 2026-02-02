@@ -398,17 +398,20 @@ type Output_FileName
     ! kernel
     character(len=60) :: outputelem
     integer :: u_outputelem = u_config + 11
+    ! Density 1B
+    character(len=60) :: outputDsME1B ! q1-q2
+    integer :: u_outputDsME1B = u_config + 12
     ! TD1B
     character(len=60) :: outputTDME1B ! q1-q2
-    integer :: u_outputTDME1B = u_config + 12
+    integer :: u_outputTDME1B = u_config + 13
     character(len=60) :: outputTDME1B_c ! q2-q1
-    integer :: u_outputTDME1B_c = u_config + 13
+    integer :: u_outputTDME1B_c = u_config + 14
     ! MEelem
     character(len=60) :: outputEMelem
-    integer :: u_outputEMelem = u_config + 14
+    integer :: u_outputEMelem = u_config + 15
     ! Eccentricity 
     character(len=60) :: outputEccentricityelem
-    integer :: u_outputEccentricityelem = u_config + 15
+    integer :: u_outputEccentricityelem = u_config + 16
 
 
 end type
