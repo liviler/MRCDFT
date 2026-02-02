@@ -127,6 +127,8 @@ integer, parameter ::   ngr = 16, &
                         ntheta = 16, &
                         nphi = 24
 integer, parameter :: Jmax_max = 10
+
+real(r64) :: eps_occupation = 1.E-10
 END MODULE Constants
 !==============================================================================!
 ! End of file                                                                  !

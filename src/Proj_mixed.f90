@@ -28,15 +28,14 @@ subroutine determine_truncated_dimension
     !
     ! Input/Output:
     !     * truncated_dim: Final truncated dimension
-    !     * eps_occupation: Adaptive truncation threshold
+    !     * eps_occupation: truncation threshold
     !     * truncated_k: Mapping from original to truncated indices
     !-----------------------------------------------------------------------------------
-    use Constants, only: r64,nkx
+    use Constants, only: r64,nkx,eps_occupation
     use Globals, only: wf1,wf2
     use MathMethods, only: sort
     integer :: it,k,truncated_dim_1,truncated_dim_2,truncated_index
     real(r64), dimension(nkx) :: sorted_v2d_1,sorted_v2d_2
-    real(r64) :: eps_occupation = 1.E-10
     do it = 1, 2
         ! count states when 2*v^2 large than occupation epsilon
         truncated_dim_1 = 0
@@ -391,9 +390,9 @@ subroutine calculate_Rotation_Matrix(alpha,beta,gamma,it)
         tmp_pRT_inv(l,l) = CMPLX(1.d0,0.d0)
     end do
     call clingd(2*truncated_dim,2*truncated_dim,2*truncated_dim,2*truncated_dim,tmp_RT,tmp_RT_inv,tmp_RT_Deter,ifl)
-    if(ifl==-1) stop 'WARNING!!!! Matrix R has zero determinant !!!! Redefine the Hillbert Space by using diff. epsocc'
+    if(ifl==-1) stop 'WARNING!!!! Matrix R has zero determinant !!!! Redefine the Hilbert Space by changing eps_occupation in Constants Module'
     call clingd(2*truncated_dim,2*truncated_dim,2*truncated_dim,2*truncated_dim,tmp_pRT,tmp_pRT_inv,tmp_pRT_Deter,ifl)
-    if(ifl==-1) stop 'WARNING!!!! Matrix pR has zero determinant !!!! Redefine the Hillbert Space by using diff. epsocc'
+    if(ifl==-1) stop 'WARNING!!!! Matrix pR has zero determinant !!!! Redefine the Hilbert Space by changing eps_occupation in Constants Module'
     ! store the (R^T)^{-1}
     do l = 1, 2*truncated_dim
         do k = 1, 2*truncated_dim
