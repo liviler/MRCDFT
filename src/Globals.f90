@@ -60,9 +60,10 @@ type Input_Parameter
     integer :: nalpha ! number of meshpoints in Euler angles alpha
     integer :: nbeta  ! number of meshpoints in Euler angles beta
     integer :: ngamma ! number of meshpoints in Euler angles gamma
-    integer :: DsType ! 0: no 1: yes
-    integer :: TDType ! 0: no 1: yes
+    integer :: DsType ! 0: no  1: 1B  2: 2B  3: 1B + 2B
+    integer :: TDType ! 0: no 1: 1B
     integer :: lambda_max ! max lambda of EM 
+    integer :: EccentriType ! 0: no 1: by Kernel Module 2: by density matrix element 3: 1+2
 end type
 type(Input_Parameter) :: input_par
 
@@ -561,6 +562,7 @@ type Option_PKO
     integer :: icm ! cent-of-mass corr. 1: q-dep; 2: aver. q
     integer :: DsType
     integer :: TDType
+    integer :: EccentriType
 end type
 type(Option_PKO) :: pko_option
 

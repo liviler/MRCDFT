@@ -100,7 +100,7 @@ Module Kernel
         ! where R is rotation operator and P is parity operator
         !----------------------------------------------------------------------
         use Constants, only: pi
-        use Globals, only: projection_mesh
+        use Globals, only: projection_mesh,pko_option
         integer :: nalpha,nbeta,ngamma
 
         nalpha = projection_mesh%nalpha
@@ -120,7 +120,9 @@ Module Kernel
         call calcualate_Norm_Hamiltonian_ParticleNumber_kernels  ! calculate <J K_1 q_1 Pi | O | J K_2 q_2 Pi >
         call calculate_EM_kernels ! calcualate <J_f K_f q_1 Pi_f ||T_lambda|| J_i K_i q_2 Pi_i >
         call calculate_E0_kernel ! <J   K_f q_1 Pi  | r2 |J   K_i q_2 Pi>
-        call calculate_Eccentricity_kernel ! <J   K_f q_1 Pi  | E_n |J   K_i q_2 Pi>
+        if( pko_option%EccentriType == 1 .or. pko_option%EccentriType == 3) then
+            call calculate_Eccentricity_kernel ! <J   K_f q_1 Pi  | E_n |J   K_i q_2 Pi>
+        end if 
         
         deallocate( Norm_PNP_AMParray,pNorm_PNP_AMParray, &
                     Etot_PNP_AMParray,pEtot_PNP_AMParray, &
@@ -658,6 +660,7 @@ Module Kernel
     !------------------------------------------------
     subroutine calculate_overlaps_after_PNP_at_Euler_angles(alpha, beta, gamma, Norm_PNP, pNorm_PNP, Etot_PNP, pEtot_PNP, Particle_PNP, pParticle_PNP,&
                 Q2m_PNP, pQ2m_PNP,cQ2m_PNP,pcQ2m_PNP,r2_PNP, pr2_PNP,Eccentri_PNP,pEccentri_PNP)
+        use Globals, only: pko_option
         use Mixed, only: calculate_mixed_DensCurrTens_and_norm_overlap
         real(r64), intent(in) :: alpha, beta, gamma
         complex(r64),intent(out) :: Norm_PNP, pNorm_PNP, Etot_PNP, pEtot_PNP, Particle_PNP(2), pParticle_PNP(2),r2_PNP(2), pr2_PNP(2),Eccentri_PNP(2),pEccentri_PNP(2)
@@ -673,7 +676,9 @@ Module Kernel
         call calculate_Rotated_Energy_after_PNP(Etot_PNP,pEtot_PNP)
         call calculate_Qlm_after_PNP(Q2m_PNP,pQ2m_PNP,cQ2m_PNP,pcQ2m_PNP)
         call calculate_r2_after_PNP(r2_PNP, pr2_PNP)
-        call calculate_Eccentricity_after_PNP(Eccentri_PNP,pEccentri_PNP)
+        if( pko_option%EccentriType == 1 .or. pko_option%EccentriType == 3) then
+            call calculate_Eccentricity_after_PNP(Eccentri_PNP,pEccentri_PNP)
+        end if 
     end subroutine
 
     subroutine calculate_norm_overlap_and_particle_number_after_PNP(Norm_PNP,pNorm_PNP,Particle_PNP,pParticle_PNP)

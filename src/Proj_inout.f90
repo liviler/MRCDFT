@@ -49,6 +49,7 @@ subroutine read_Proj_configuration(ifPrint)
     read(u_pko, format2) input_par%DsType
     read(u_pko, format2) input_par%TDType
     read(u_pko, format2) input_par%lambda_max
+    read(u_pko, format2) input_par%EccentriType
     call set_pko_parameters
     if(ifPrint) call printParameters
     contains
@@ -109,6 +110,9 @@ subroutine read_Proj_configuration(ifPrint)
         pko_option%TDType = input_par%TDType
         if(pko_option%TDType<0 .or. pko_option%TDType>1) stop "TDType should be 0 or 1"
         TDs%lambda_max = input_par%lambda_max ! max lambda of 1B transition density
+        ! set calculate eccentricity kernel option
+        pko_option%EccentriType = input_par%EccentriType
+        if(pko_option%EccentriType<0 .or. pko_option%EccentriType>3) stop "EccentriType should be 0 or 1 or 2 or 3"
     end subroutine
     subroutine printParameters
         use Globals, only: input_par,pko_option,gcm_space,TDs
@@ -231,7 +235,7 @@ subroutine write_pko_output(q1,q2)
     call set_pko_output_filename(q1,q2,pko_option%AMPType)
     call write_kernels
     
-    if(.False.) then
+    if(pko_option%EccentriType==2 .or. pko_option%EccentriType==3) then
         call calculate_Eccentricity_kernel_by_density_matrix_element
     end if 
     call write_eccentricity_operators_kernels(q1,q2)
