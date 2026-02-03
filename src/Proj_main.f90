@@ -39,7 +39,7 @@ contains
                 stop 'Kernel_Symmetry should be 0, 1, 2'
             end if
             do q2 = q2_start, q2_end
-                write(*,"(5x,'(q1,q2)=(',i3,',',i3,')')") q1, q2
+                write(*,"(5x,'(q1,q2)=(',i3,',',i3,') >>>>>>>>>>')") q1, q2
                 call read_wavefuntion_files(q1,q2)
                 call determine_truncated_dimension
                 call calculate_Kernel

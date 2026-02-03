@@ -158,11 +158,11 @@ subroutine read_Proj_configuration(ifPrint)
 
         write(*,"(5x,a,':   ',i3)") adjust_left('Maximal J value',Strlength), gcm_space%Jmax
         if (pko_option%DsType /=0 ) then
-            if(pko_option%DsType==1) write(*,"(5x,a,':   ',a)") adjust_left('calculate density ME',Strlength),'1B'
-            if(pko_option%DsType==2) write(*,"(5x,a,':   ',a)") adjust_left('calculate density ME',Strlength),'2B'
-            if(pko_option%DsType==3) write(*,"(5x,a,':   ',a)") adjust_left('calculate density ME',Strlength),'1B + 2B'
+            if(pko_option%DsType==1) write(*,"(5x,a,':   ',a)") adjust_left('Calculate density ME',Strlength),'1B'
+            if(pko_option%DsType==2) write(*,"(5x,a,':   ',a)") adjust_left('Calculate density ME',Strlength),'2B'
+            if(pko_option%DsType==3) write(*,"(5x,a,':   ',a)") adjust_left('Calculate density ME',Strlength),'1B + 2B'
         else 
-            write(*,"(5x,a,':   ',a)") adjust_left('calculate density ME',Strlength),'No'
+            write(*,"(5x,a,':   ',a)") adjust_left('Calculate density ME',Strlength),'No'
         end if 
 
         if (pko_option%TDType /=0 ) then
@@ -170,6 +170,14 @@ subroutine read_Proj_configuration(ifPrint)
             write(*,"(5x,a,':   ',i3)") adjust_left('Maximal lambda value(1BTD)',Strlength),TDs%lambda_max
         else 
             write(*,"(5x,a,':   ',a)") adjust_left('Calculate reduced transition density ME',Strlength),'No'
+        end if 
+
+        if (pko_option%EccentriType /=0 ) then
+            if(pko_option%EccentriType==1) write(*,"(5x,a,':   ',a)") adjust_left('Calculate eccentricity kernel',Strlength),'(1)'
+            if(pko_option%EccentriType==2) write(*,"(5x,a,':   ',a)") adjust_left('Calculate eccentricity kernel',Strlength),'(2)'
+            if(pko_option%EccentriType==3) write(*,"(5x,a,':   ',a)") adjust_left('Calculate eccentricity kernel',Strlength),'(3)'
+        else 
+            write(*,"(5x,a,':   ',a)") adjust_left('Calculate eccentricity kernel',Strlength),'No'
         end if 
 
         if(pko_option%ihf == 1) then 
@@ -412,6 +420,7 @@ subroutine write_eccentricity_operators_kernels(q1,q2)
     close(outputfile%u_outputelem)
 end subroutine
 
+! density matrix elements
 subroutine write_1B_density_matrix_elements
     use Globals, only: gcm_space,pko_option,BS,outputfile,Proj_densities
     integer :: J,K1_start,K1_end,K2_start,K2_end,K1,K2,iParity,Parity,ifg,m1,m2
@@ -516,6 +525,7 @@ subroutine write_reduced_1B_transition_density_matrix_elements(q1,q2)
     end if 
 end subroutine
 
+! matrix elements of operator
 subroutine  write_reduced_1B_multipole_matrix_elements
     use Globals, only: outputfile,BS,TDs,gcm_space
     use EM, only: reduced_multipole_matrix_elements,reduced_monopole_matrix_elements,rl_nl
