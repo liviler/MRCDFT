@@ -64,7 +64,7 @@ contains
         !-----------------------------------------------------------------
         use Globals, only: gcm_space,pko_option,BS,kernels
         integer, intent(in) :: q1,q2
-        integer :: dim_m_max,J,K1_start,K1_end,K2_start,K2_end,K1,K2,iParity,Parity,ifg1,m1,ifg2,m2,ifg3,m3,ifg4,m4
+        integer :: dim_m_max,J,K1_start,K1_end,K2_start,K2_end,K1,K2,iParity,Parity,ifg1,m1,ifg2,m2,ifg3,m3,ifg4,m4,total_iter,iter
         complex(r64) :: ME1B(2),ME2B(2)
         complex(r64) :: N(2), N2(2)
         ! logical :: q2_q1_Symmetry
@@ -106,8 +106,18 @@ contains
                         if( Parity /= (-1)**J) cycle
                         N = 0.d0
                         N2 = 0.d0 
-                        do ifg1 = 1, 2
-                        do m1 = 1, BS%HO_sph%idsp(1,ifg1)
+                        total_iter = BS%HO_sph%idsp(1,1) + BS%HO_sph%idsp(1,2)
+                        !$OMP PARALLEL DEFAULT(shared) PRIVATE(iter,ifg1,m1,ifg2,m2,ifg3,m3,ifg4,m4,ME1B,ME2B) &
+                        !$omp reduction(+:N,N2)
+                        !$OMP DO COLLAPSE(1) SCHEDULE(static)
+                        do iter = 1,total_iter
+                            if(iter <= BS%HO_sph%idsp(1,1)) then
+                                ifg1 = 1
+                                m1 = iter
+                            else
+                                ifg1 = 2
+                                m1 = iter - BS%HO_sph%idsp(1,1)
+                            end if
                             do ifg2 = 1, 2
                             do m2 = 1, BS%HO_sph%idsp(1,ifg2)
                                 if(pko_option%DsType == 1 .or. pko_option%DsType == 3) then 
@@ -115,9 +125,9 @@ contains
                                     if(ifg1==ifg2) then
                                         call calculate_one_body_density_matrix_element(J,K1,K2,Parity,ifg1,m1,ifg2,m2,ME1B)
                                         ! neutron
-                                        Proj_densities%ME1B(J,K1,K2,iParity,1,ifg1,m1,m2) = Real(ME1B(1))
+                                        Proj_densities%ME1B(J,K1,K2,iParity,1,ifg1,m1,m2) = ME1B(1)
                                         ! proton
-                                        Proj_densities%ME1B(J,K1,K2,iParity,2,ifg1,m1,m2) = Real(ME1B(2))
+                                        Proj_densities%ME1B(J,K1,K2,iParity,2,ifg1,m1,m2) = ME1B(2)
                                         ! check particle number
                                         if (ifg1==ifg2 .and. m1==m2) then
                                             N(1) = N(1) + Proj_densities%ME1B(J,K1,K2,iParity,1,ifg1,m1,m2)
@@ -149,8 +159,8 @@ contains
                                 end if 
                             end do
                             end do
-                        end do 
                         end do
+                        !$OMP END PARALLEL
                         write(*,*) "J=",J,"K=",K1,"K'=",K2,'Parity',Parity,'    N     =',Real(N(1)/(kernels%N_KK(J,K1,K2,iParity)+1.0d-30))
                         write(*,*) "J=",J,"K=",K1,"K'=",K2,'Parity',Parity,'    Z     =',Real(N(2)/(kernels%N_KK(J,K1,K2,iParity)+1.0d-30))
                         write(*,*) "J=",J,"K=",K1,"K'=",K2,'Parity',Parity,'    N(1-N)=',Real(N2(1)/(kernels%N_KK(J,K1,K2,iParity)+1.0d-30))
@@ -173,74 +183,67 @@ contains
         use Basis, only: djmk
         integer,intent(in) :: J,K1,K2,Parity,ifg1,m1,ifg2,m2
         complex(r64), intent(out) :: ME1B(2)
-        integer :: ialpha,ibeta,igamma,phi_n_index,phi_p_index,it
+        integer :: ialpha,ibeta,igamma,L_n,L_p,phi_n_index,phi_p_index,it
         real(r64) :: alpha,beta,gamma,w,phi_n,phi_p
-        complex(r64) :: calpha,cgamma,fac_AMP,cpi,fac1,fac2,emiNphi,emiZphi,fac_PNP,norm,pnorm,local_ME1B(2)
-        ME1B = (0.d0, 0.d0)
-        !$OMP PARALLEL DEFAULT(shared) PRIVATE(ialpha,ibeta,igamma,alpha,beta,gamma,calpha,cgamma, &
-        !$OMP w,fac1,fac2,cpi,fac_AMP,phi_n_index,phi_p_index,phi_n,phi_p,emiNphi,emiZphi, &
-        !$OMP fac_PNP,norm,pnorm,it,local_ME1B) 
-        local_ME1B = (0.d0, 0.d0) 
-        !$OMP DO COLLAPSE(5) SCHEDULE(static)
+        complex(r64) :: calpha,cgamma,fac_AMP,cpi,fac1,fac2,emiNphi,emiZphi,fac_PNP,norm,pnorm
+        ME1B = (0.d0, 0.d0) 
         do ialpha = 1, projection_mesh%nalpha
             do ibeta = 1, projection_mesh%nbeta
                 do igamma = 1, projection_mesh%ngamma
-                    do phi_n_index = 1, projection_mesh%nphi(1)
-                        do phi_p_index = 1, projection_mesh%nphi(2)
-                            ! If we have implemented the symmetry of rho_mm, then this lines are not needed.
-                            if(pko_option%Euler_Symmetry == 2) then
-                                stop '[calculate_one_body_density_matrix_element]: Euler_Symmetry=2, Not yet implemented! You should set the Symmetry of Euler angles as 0!'
-                            end if
-                            if(pko_option%Euler_Symmetry==1 .and. ibeta>(projection_mesh%nbeta+1)/2) then
-                                cycle
-                                ! Using the tensor symmetry, it can be proven that when Parity = (-1)**J
-                                !  the contribution from (pi/2, pi]) is the same as that from (0, pi/2).
-                                ! stop '[calculate_one_body_density_matrix_element]: Euler_Symmetry=1, Not yet implemented! You should set the Symmetry of Euler angles as 0!'
-                            end if
+                    ! If we have implemented the symmetry of rho_mm, then these lines are not needed.
+                    if(pko_option%Euler_Symmetry == 2) then
+                        stop '[calculate_one_body_density_matrix_element]: Euler_Symmetry=2, Not yet implemented! You should set the Symmetry of Euler angles as 0!'
+                    end if
+                    if(pko_option%Euler_Symmetry==1 .and. ibeta>(projection_mesh%nbeta+1)/2) then
+                        cycle
+                        ! Using the tensor symmetry, it can be proven that when Parity = (-1)**J
+                        !  the contribution from (pi/2, pi]) is the same as that from (0, pi/2).
+                        ! stop '[calculate_one_body_density_matrix_element]: Euler_Symmetry=1, Not yet implemented! You should set the Symmetry of Euler angles as 0!'
+                    end if
 
-                            alpha = projection_mesh%alpha(ialpha)
-                            calpha = DCMPLX(0.d0,alpha)
-                            beta = projection_mesh%beta(ibeta)
-                            gamma = projection_mesh%gamma(igamma)
-                            cgamma = DCMPLX(0.d0,gamma)
-                            if(pko_option%AMPtype==0) then
-                                fac_AMP = 1
-                            else if (pko_option%AMPtype==1) then
-                                w = projection_mesh%wbeta(ibeta)
-                                fac1 = (2*J+1)/(2.0d0)*dsin(beta)*djmk(J,K1,K2,dcos(beta),0)
-                                fac_AMP = fac1*w
-                            else
-                                cpi = DCMPLX(0.d0,pi) ! i*pi
-                                w = projection_mesh%walpha(ialpha)*projection_mesh%wbeta(ibeta)*projection_mesh%wgamma(igamma)
-                                fac1 = (2*J+1)/(8.0d0*pi**2)*dsin(beta)*djmk(J,K1,K2,dcos(beta),0)*CDEXP(-K1*calpha-K2*cgamma)
-                                fac2 = 1.0d0 + CDEXP(-K1*cpi) + CDEXP(-K2*cpi) + CDEXP(-K1*cpi-K2*cpi) ! D2 symmetry is required, with alpha, gamma in [0, pi].
-                                fac_AMP = fac1*fac2*w
-                            end if
-                            phi_n =  phi_n_index*projection_mesh%dphi(1)
-                            emiNphi = cdexp(-nucleus_attributes%neutron_number*cmplx(0,phi_n)) ! e^{-iN\phi_n}              
+                    alpha = projection_mesh%alpha(ialpha)
+                    calpha = DCMPLX(0.d0,alpha)
+                    beta = projection_mesh%beta(ibeta)
+                    gamma = projection_mesh%gamma(igamma)
+                    cgamma = DCMPLX(0.d0,gamma)
+                    if(pko_option%AMPtype==0) then
+                        fac_AMP = 1
+                    else if (pko_option%AMPtype==1) then
+                        w = projection_mesh%wbeta(ibeta)
+                        fac1 = (2*J+1)/(2.0d0)*dsin(beta)*djmk(J,K1,K2,dcos(beta),0)
+                        fac_AMP = fac1*w
+                    else
+                        cpi = DCMPLX(0.d0,pi) ! i*pi
+                        w = projection_mesh%walpha(ialpha)*projection_mesh%wbeta(ibeta)*projection_mesh%wgamma(igamma)
+                        fac1 = (2*J+1)/(8.0d0*pi**2)*dsin(beta)*djmk(J,K1,K2,dcos(beta),0)*CDEXP(-K1*calpha-K2*cgamma)
+                        fac2 = 1.0d0 + CDEXP(-K1*cpi) + CDEXP(-K2*cpi) + CDEXP(-K1*cpi-K2*cpi) ! D2 symmetry is required, with alpha, gamma in [0, pi].
+                        fac_AMP = fac1*fac2*w
+                    end if
+                    L_n = projection_mesh%nphi(1)
+                    L_p = projection_mesh%nphi(2)
+                    do phi_n_index = 1, L_n
+                        phi_n =  phi_n_index*projection_mesh%dphi(1)
+                        emiNphi = cdexp(-nucleus_attributes%neutron_number*cmplx(0,phi_n)) ! e^{-iN\phi_n}
+                        do phi_p_index = 1, L_p
                             phi_p =  phi_p_index*projection_mesh%dphi(2) 
                             emiZphi = cdexp(-nucleus_attributes%proton_number*cmplx(0,phi_p)) ! e^{-iZ\phi_p}
-                            fac_PNP = 1.d0/(projection_mesh%nphi(1)*projection_mesh%nphi(2))*emiNphi*emiZphi
+                            fac_PNP = 1.d0/(L_n*L_p)*emiNphi*emiZphi
                             norm = Proj_densities%norm(phi_n_index,1,ialpha,ibeta,igamma)*Proj_densities%norm(phi_p_index,2,ialpha,ibeta,igamma)
                             pnorm = Proj_densities%pnorm(phi_n_index,1,ialpha,ibeta,igamma)*Proj_densities%pnorm(phi_p_index,2,ialpha,ibeta,igamma)
                             ! neutron part
                             it = 1 
-                            local_ME1B(it) = local_ME1B(it) + fac_AMP*fac_PNP*(norm*Proj_densities%rho_mm(m1,m2,indexfg(ifg1,ifg2),phi_n_index,it,ialpha,ibeta,igamma)+ &
+                            ME1B(it) = ME1B(it) + fac_AMP*fac_PNP*(norm*Proj_densities%rho_mm(m1,m2,indexfg(ifg1,ifg2),phi_n_index,it,ialpha,ibeta,igamma)+ &
                                                     Parity*pnorm*Proj_densities%prho_mm(m1,m2,indexfg(ifg1,ifg2),phi_n_index,it,ialpha,ibeta,igamma))/2.0d0
                             ! proton part
                             it = 2
-                            local_ME1B(it) = local_ME1B(it) + fac_AMP*fac_PNP*(norm*Proj_densities%rho_mm(m1,m2,indexfg(ifg1,ifg2),phi_p_index,it,ialpha,ibeta,igamma)+ &
+                            ME1B(it) = ME1B(it) + fac_AMP*fac_PNP*(norm*Proj_densities%rho_mm(m1,m2,indexfg(ifg1,ifg2),phi_p_index,it,ialpha,ibeta,igamma)+ &
                                                     Parity*pnorm*Proj_densities%prho_mm(m1,m2,indexfg(ifg1,ifg2),phi_p_index,it,ialpha,ibeta,igamma))/2.0d0
                         end do
                     end do
                 end do
             end do
         end do 
-        !$OMP CRITICAL
-        ME1B(1) = ME1B(1) + local_ME1B(1)
-        ME1B(2) = ME1B(2) + local_ME1B(2)
-        !$OMP END CRITICAL
-        !$OMP END PARALLEL
+
         if(pko_option%Euler_Symmetry==1 .and. pko_option%AMPtype==1 ) then
             ! If we have implemented the symmetry of rho_mm, No need to multiply by 2.
             ME1B(1) = ME1B(1)*2.d0
@@ -267,59 +270,56 @@ contains
         use Basis, only: djmk
         integer,intent(in) :: J,K1,K2,Parity,ifg1,m1,ifg2,m2,ifg3,m3,ifg4,m4
         complex(r64), intent(out) :: ME2B(2)
-        integer :: ialpha,ibeta,igamma,phi_n_index,phi_p_index,it
+        integer :: ialpha,ibeta,igamma,L_n,L_p,phi_n_index,phi_p_index,it
         real(r64) :: alpha,beta,gamma,w,phi_n,phi_p
-        complex(r64) :: calpha,cgamma,fac_AMP,cpi,fac1,fac2,emiNphi,emiZphi,fac_PNP,norm,pnorm,local_ME2B(2)
+        complex(r64) :: calpha,cgamma,fac_AMP,cpi,fac1,fac2,emiNphi,emiZphi,fac_PNP,norm,pnorm
         ME2B = (0.d0, 0.d0)
-        !$OMP PARALLEL DEFAULT(shared) PRIVATE(ialpha,ibeta,igamma,alpha,beta,gamma,calpha,cgamma, &
-        !$OMP w,fac1,fac2,cpi,fac_AMP,phi_n_index,phi_p_index,phi_n,phi_p,emiNphi,emiZphi, &
-        !$OMP fac_PNP,norm,pnorm,it,local_ME2B)
-        local_ME2B = (0.d0, 0.d0)
-        !$OMP DO COLLAPSE(5) SCHEDULE(static)
         do ialpha = 1, projection_mesh%nalpha
             do ibeta = 1, projection_mesh%nbeta
                 do igamma = 1, projection_mesh%ngamma
-                    do phi_n_index = 1, projection_mesh%nphi(1)
-                        do phi_p_index = 1, projection_mesh%nphi(2)
-                            ! If we have implemented the symmetry of rho_mm, then this lines are not needed.
-                            if(pko_option%Euler_Symmetry == 2) then
-                                stop '[calculate_two_body_density_matrix_element]: Euler_Symmetry=2, Not yet implemented! You should set the Symmetry of Euler angles as 0!'
-                            end if
-                            if(pko_option%Euler_Symmetry==1 .and. ibeta>(projection_mesh%nbeta+1)/2) then
-                                cycle
-                                ! Using the tensor symmetry, it can be proven that when Parity = (-1)**J
-                                !  the contribution from (pi/2, pi]) is the same as that from (0, pi/2).
-                                ! stop '[calculate_two_body_density_matrix_element]: Euler_Symmetry=1, Not yet implemented! You should set the Symmetry of Euler angles as 0!'
-                            end if
+                    ! If we have implemented the symmetry of rho_mm, then these lines are not needed.
+                    if(pko_option%Euler_Symmetry == 2) then
+                        stop '[calculate_two_body_density_matrix_element]: Euler_Symmetry=2, Not yet implemented! You should set the Symmetry of Euler angles as 0!'
+                    end if
+                    if(pko_option%Euler_Symmetry==1 .and. ibeta>(projection_mesh%nbeta+1)/2) then
+                        cycle
+                        ! Using the tensor symmetry, it can be proven that when Parity = (-1)**J
+                        !  the contribution from (pi/2, pi]) is the same as that from (0, pi/2).
+                        ! stop '[calculate_two_body_density_matrix_element]: Euler_Symmetry=1, Not yet implemented! You should set the Symmetry of Euler angles as 0!'
+                    end if
 
-                            alpha = projection_mesh%alpha(ialpha)
-                            calpha = DCMPLX(0.d0,alpha)
-                            beta = projection_mesh%beta(ibeta)
-                            gamma = projection_mesh%gamma(igamma)
-                            cgamma = DCMPLX(0.d0,gamma)
-                            if(pko_option%AMPtype==0) then
-                                fac_AMP = 1
-                            else if (pko_option%AMPtype==1) then
-                                w = projection_mesh%wbeta(ibeta)
-                                fac1 = (2*J+1)/(2.0d0)*dsin(beta)*djmk(J,K1,K2,dcos(beta),0)
-                                fac_AMP = fac1*w
-                            else
-                                cpi = DCMPLX(0.d0,pi) ! i*pi
-                                w = projection_mesh%walpha(ialpha)*projection_mesh%wbeta(ibeta)*projection_mesh%wgamma(igamma)
-                                fac1 = (2*J+1)/(8.0d0*pi**2)*dsin(beta)*djmk(J,K1,K2,dcos(beta),0)*CDEXP(-K1*calpha-K2*cgamma)
-                                fac2 = 1.0d0 + CDEXP(-K1*cpi) + CDEXP(-K2*cpi) + CDEXP(-K1*cpi-K2*cpi) ! D2 symmetry is required, with alpha, gamma in [0, pi].
-                                fac_AMP = fac1*fac2*w
-                            end if        
-                            phi_n =  phi_n_index*projection_mesh%dphi(1)
-                            emiNphi = cdexp(-nucleus_attributes%neutron_number*cmplx(0,phi_n)) ! e^{-iN\phi_n}
+                    alpha = projection_mesh%alpha(ialpha)
+                    calpha = DCMPLX(0.d0,alpha)
+                    beta = projection_mesh%beta(ibeta)
+                    gamma = projection_mesh%gamma(igamma)
+                    cgamma = DCMPLX(0.d0,gamma)
+                    if(pko_option%AMPtype==0) then
+                        fac_AMP = 1
+                    else if (pko_option%AMPtype==1) then
+                        w = projection_mesh%wbeta(ibeta)
+                        fac1 = (2*J+1)/(2.0d0)*dsin(beta)*djmk(J,K1,K2,dcos(beta),0)
+                        fac_AMP = fac1*w
+                    else
+                        cpi = DCMPLX(0.d0,pi) ! i*pi
+                        w = projection_mesh%walpha(ialpha)*projection_mesh%wbeta(ibeta)*projection_mesh%wgamma(igamma)
+                        fac1 = (2*J+1)/(8.0d0*pi**2)*dsin(beta)*djmk(J,K1,K2,dcos(beta),0)*CDEXP(-K1*calpha-K2*cgamma)
+                        fac2 = 1.0d0 + CDEXP(-K1*cpi) + CDEXP(-K2*cpi) + CDEXP(-K1*cpi-K2*cpi) ! D2 symmetry is required, with alpha, gamma in [0, pi].
+                        fac_AMP = fac1*fac2*w
+                    end if
+                    L_n = projection_mesh%nphi(1)
+                    L_p = projection_mesh%nphi(2)
+                    do phi_n_index = 1, L_n
+                        phi_n =  phi_n_index*projection_mesh%dphi(1)
+                        emiNphi = cdexp(-nucleus_attributes%neutron_number*cmplx(0,phi_n)) ! e^{-iN\phi_n}
+                        do phi_p_index = 1, L_p
                             phi_p =  phi_p_index*projection_mesh%dphi(2) 
                             emiZphi = cdexp(-nucleus_attributes%proton_number*cmplx(0,phi_p)) ! e^{-iZ\phi_p}
-                            fac_PNP = 1.d0/(projection_mesh%nphi(1)*projection_mesh%nphi(2))*emiNphi*emiZphi
+                            fac_PNP = 1.d0/(L_n*L_p)*emiNphi*emiZphi
                             norm = Proj_densities%norm(phi_n_index,1,ialpha,ibeta,igamma)*Proj_densities%norm(phi_p_index,2,ialpha,ibeta,igamma)
                             pnorm = Proj_densities%pnorm(phi_n_index,1,ialpha,ibeta,igamma)*Proj_densities%pnorm(phi_p_index,2,ialpha,ibeta,igamma)
                             ! neutron part
                             it = 1
-                            local_ME2B(it) = local_ME2B(it) + fac_AMP*fac_PNP* &
+                            ME2B(it) = ME2B(it) + fac_AMP*fac_PNP* &
                                             (norm* &
                                             (Proj_densities%rho_mm(m1,m4,indexfg(ifg1,ifg4),phi_n_index,it,ialpha,ibeta,igamma)*Proj_densities%rho_mm(m2,m3,indexfg(ifg2,ifg3),phi_n_index,it,ialpha,ibeta,igamma) &
                                             -Proj_densities%rho_mm(m2,m4,indexfg(ifg2,ifg4),phi_n_index,it,ialpha,ibeta,igamma)*Proj_densities%rho_mm(m1,m3,indexfg(ifg1,ifg3),phi_n_index,it,ialpha,ibeta,igamma) &
@@ -331,7 +331,7 @@ contains
                                             )/2.0d0
                             ! proton part
                             it = 2
-                            local_ME2B(it) = local_ME2B(it) + fac_AMP*fac_PNP* &
+                            ME2B(it) = ME2B(it) + fac_AMP*fac_PNP* &
                                             (norm* &
                                             (Proj_densities%rho_mm(m1,m4,indexfg(ifg1,ifg4),phi_p_index,it,ialpha,ibeta,igamma)*Proj_densities%rho_mm(m2,m3,indexfg(ifg2,ifg3),phi_p_index,it,ialpha,ibeta,igamma) &
                                             -Proj_densities%rho_mm(m2,m4,indexfg(ifg2,ifg4),phi_p_index,it,ialpha,ibeta,igamma)*Proj_densities%rho_mm(m1,m3,indexfg(ifg1,ifg3),phi_p_index,it,ialpha,ibeta,igamma) &
@@ -346,11 +346,7 @@ contains
                 end do
             end do
         end do
-        !$OMP CRITICAL
-        ME2B(1) = ME2B(1) + local_ME2B(1)
-        ME2B(2) = ME2B(2) + local_ME2B(2)
-        !$OMP END CRITICAL
-        !$OMP END PARALLEL
+
         if(pko_option%Euler_Symmetry==1 .and. pko_option%AMPtype==1) then
             ! If we have implemented the symmetry of rho_mm, No need to multiply by 2.
             ME2B(1) = ME2B(1)*2.d0
@@ -379,4 +375,5 @@ contains
             stop 'wrong ifg1 and ifg2'
         end if 
     end function
+
 End Module Proj_Density
