@@ -407,13 +407,14 @@ type Output_FileName
     integer :: u_outputTDME1B = u_config + 13
     character(len=60) :: outputTDME1B_c ! q2-q1
     integer :: u_outputTDME1B_c = u_config + 14
-    ! MEelem
-    character(len=60) :: outputEMelem
-    integer :: u_outputEMelem = u_config + 15
+    ! EM me
+    character(len=60) :: outputEMme
+    integer :: u_outputEMme = u_config + 15
     ! Eccentricity 
-    character(len=60) :: outputEccentricityelem
-    integer :: u_outputEccentricityelem = u_config + 16
-
+    character(len=60) :: outputEccentricityme
+    integer :: u_outputEccentricityme = u_config + 16
+    character(len=60) :: outputEccentricityKernel
+    integer :: u_outputEccentricityKernel = u_config + 17
 
 end type
 type(Output_FileName) :: outputfile
