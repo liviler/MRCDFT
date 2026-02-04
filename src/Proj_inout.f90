@@ -398,7 +398,7 @@ subroutine write_eccentricity_operators_kernels(q1,q2)
     integer :: J,K1,K2,parity
     character(1), dimension(2) :: ParityChar = ['+', '-']
     character(len=*), parameter ::  format1 = "(3i5,4x,a,4(4x,f5.3))", &
-                                    format2 = "(2e15.8)"
+                                    format2 = "(3e15.8)"
     open(outputfile%u_outputEccentricityKernel,form='formatted',file=outputfile%outputEccentricityKernel)
         do J = 0,0 
             do K1 = -0,0
@@ -413,15 +413,23 @@ subroutine write_eccentricity_operators_kernels(q1,q2)
                     end if
                     write(outputfile%u_outputEccentricityKernel,format1)  J,K1,K2,ParityChar(parity),constraint%betac(q1),constraint%bet3c(q1),constraint%betac(q2),constraint%bet3c(q2)
                     ! ! proton part
-                    write(outputfile%u_outputEccentricityKernel,format2)  kernels%Eccentricity_KK(J,K1,K2,2,parity)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)
+                    write(outputfile%u_outputEccentricityKernel,format2)  Real(kernels%Eccentricity_KK(J,K1,K2,2,parity,1)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)), & ! 1B
+                                                                          Real(kernels%Eccentricity_KK(J,K1,K2,2,parity,2)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)), & ! 2B
+                             Real((kernels%Eccentricity_KK(J,K1,K2,2,parity,1)+kernels%Eccentricity_KK(J,K1,K2,2,parity,2))/(kernels%N_KK(J,K1,K2,parity)+1.0d-30))   ! 1B +2B
                     ! ! neutron part
-                    write(outputfile%u_outputEccentricityKernel,format2)  kernels%Eccentricity_KK(J,K1,K2,1,parity)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)
+                    write(outputfile%u_outputEccentricityKernel,format2)  Real(kernels%Eccentricity_KK(J,K1,K2,1,parity,1)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)), & ! 1B
+                                                                          Real(kernels%Eccentricity_KK(J,K1,K2,1,parity,2)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)), & ! 2B
+                             Real((kernels%Eccentricity_KK(J,K1,K2,1,parity,1)+kernels%Eccentricity_KK(J,K1,K2,1,parity,2))/(kernels%N_KK(J,K1,K2,parity)+1.0d-30))   ! 1B +2B
 
                     write(outputfile%u_outputEccentricityKernel,*) "By Density:"
                     ! ! proton part
-                    write(outputfile%u_outputEccentricityKernel,format2)  kernels%Eccentricity_KK_byDensity(J,K1,K2,2,parity)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)
+                    write(outputfile%u_outputEccentricityKernel,format2)   Real(kernels%Eccentricity_KK_byDensity(J,K1,K2,2,parity,1)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)), & ! 1B
+                                                                           Real(kernels%Eccentricity_KK_byDensity(J,K1,K2,2,parity,2)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)), & ! 2B
+                    Real((kernels%Eccentricity_KK_byDensity(J,K1,K2,2,parity,1)+kernels%Eccentricity_KK_byDensity(J,K1,K2,2,parity,2))/(kernels%N_KK(J,K1,K2,parity)+1.0d-30))   ! 1B +2B
                     ! ! neutron part
-                    write(outputfile%u_outputEccentricityKernel,format2)  kernels%Eccentricity_KK_byDensity(J,K1,K2,1,parity)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)
+                    write(outputfile%u_outputEccentricityKernel,format2)   Real(kernels%Eccentricity_KK_byDensity(J,K1,K2,1,parity,1)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)), & ! 1B
+                                                                           Real(kernels%Eccentricity_KK_byDensity(J,K1,K2,1,parity,2)/(kernels%N_KK(J,K1,K2,parity)+1.0d-30)), & ! 2B
+                    Real((kernels%Eccentricity_KK_byDensity(J,K1,K2,1,parity,1)+kernels%Eccentricity_KK_byDensity(J,K1,K2,1,parity,2))/(kernels%N_KK(J,K1,K2,parity)+1.0d-30))   ! 1B +2B
                 end do
             end do
         end do 

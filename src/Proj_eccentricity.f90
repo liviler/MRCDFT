@@ -14,7 +14,7 @@ contains
         use Globals, only: BS, mix
         integer :: n,iphi,it
         integer :: ifg1,ifg2,ifg3,ifg4,m1,m2,m3,m4,iter,total_iter
-        complex(r64) :: Eccentri,pEccentri,Eccentri_1B,pEccentri_1B,Eccentri_2B,pEccentri_2B
+        complex(r64) :: Eccentri(2),pEccentri(2),Eccentri_1B,pEccentri_1B,Eccentri_2B,pEccentri_2B
         real(r64) :: e_1B,e_2B 
         Eccentri_1B = (0.d0,0.d0)
         pEccentri_1B = (0.d0,0.d0)
@@ -74,8 +74,10 @@ contains
             end do 
         end do 
         !$OMP END PARALLEL
-        Eccentri = Eccentri_1B + Eccentri_2B
-        pEccentri = pEccentri_1B + pEccentri_2B
+        Eccentri(1) = Eccentri_1B
+        Eccentri(2) =  Eccentri_2B
+        pEccentri(1) = pEccentri_1B 
+        pEccentri(2) = pEccentri_2B
     end subroutine
 
     subroutine eccentricity_matrix_element_one_body(ifg1,m1,ifg2,m2,n,EME1B)
@@ -267,11 +269,13 @@ contains
                                 end do
                                 end do 
                             end do
-                        end do 
+                            end do 
                         end do
                         !$OMP END PARALLEL
-                        kernels%Eccentricity_KK_byDensity(J,K1,K2,1,iParity) =  Eccentricity_1B(1) + Eccentricity_2B(1)
-                        kernels%Eccentricity_KK_byDensity(J,K1,K2,2,iParity) =  Eccentricity_1B(2) + Eccentricity_2B(2)
+                        kernels%Eccentricity_KK_byDensity(J,K1,K2,1,iParity,1) = Eccentricity_1B(1) 
+                        kernels%Eccentricity_KK_byDensity(J,K1,K2,1,iParity,2) = Eccentricity_2B(1)
+                        kernels%Eccentricity_KK_byDensity(J,K1,K2,2,iParity,1) = Eccentricity_1B(2) 
+                        kernels%Eccentricity_KK_byDensity(J,K1,K2,2,iParity,2) = Eccentricity_2B(2)
                     end do 
                 end do 
             end do 
