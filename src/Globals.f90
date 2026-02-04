@@ -413,7 +413,7 @@ type Output_FileName
     ! Eccentricity 
     character(len=60) :: outputEccentricityme
     integer :: u_outputEccentricityme = u_config + 16
-    character(len=60) :: outputEccentricityKernel
+    character(len=70) :: outputEccentricityKernel
     integer :: u_outputEccentricityKernel = u_config + 17
 
 end type
