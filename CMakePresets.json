@@ -9,8 +9,7 @@
         "cacheVariables": {
           "CMAKE_BUILD_TYPE": "Release",
           "CMAKE_Fortran_COMPILER": "gfortran",
-          "MPI_Fortran_COMPILER": "mpif90",
-          "CMAKE_VERBOSE_MAKEFILE": "ON"
+          "MPI_Fortran_COMPILER": "mpif90"
         }
       },
       {
@@ -21,8 +20,7 @@
         "cacheVariables": {
           "CMAKE_BUILD_TYPE": "Release",
           "CMAKE_Fortran_COMPILER": "ifort",
-          "MPI_Fortran_COMPILER": "mpiifort",
-          "CMAKE_VERBOSE_MAKEFILE": "ON"
+          "MPI_Fortran_COMPILER": "mpiifort"
         }
       },
       {
