@@ -33,8 +33,8 @@ MR-CDFT is a computational code for nuclear structure calculations for quadrupol
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/liviler/MR_CDFT_f90.git
-    cd MR_CDFT_f90
+    git clone -b master https://github.com/liviler/MRCDFT.git
+    cd MRCDFT
     ```
 
 2. Compile the code:
@@ -42,16 +42,12 @@ MR-CDFT is a computational code for nuclear structure calculations for quadrupol
     You can compile the code using either gfortran or Intel Fortran (ifort), depending on the compiler available on your system.
     * Using CMake 
         ```bash
-            cmake --preset mpi-gfortran
-            cmake --build --preset mpi-gfortran
+        cmake --preset mpi-gfortran
+        cmake --build --preset mpi-gfortran
         ```
-    * Using gfortran
+    * Using Make
         ```bash
-        make gfortran
-        ```
-    * Using ifort
-        ```bash
-        make ifort
+        make mpif90
         ```
         Before running the make command, ensure that GNU Make and the selected Fortran compiler are properly installed and available in your environment.
 
