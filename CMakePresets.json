@@ -8,8 +8,7 @@
         "binaryDir": "${sourceDir}/build/mpi-gfortran",
         "cacheVariables": {
           "CMAKE_BUILD_TYPE": "Release",
-          "CMAKE_Fortran_COMPILER": "gfortran",
-          "MPI_Fortran_COMPILER": "mpif90"
+          "CMAKE_Fortran_COMPILER": "gfortran"
         }
       },
       {
@@ -19,8 +18,17 @@
         "binaryDir": "${sourceDir}/build/mpi-ifort",
         "cacheVariables": {
           "CMAKE_BUILD_TYPE": "Release",
-          "CMAKE_Fortran_COMPILER": "ifort",
-          "MPI_Fortran_COMPILER": "mpiifort"
+          "CMAKE_Fortran_COMPILER": "ifort"
+        }
+      },
+      {
+        "name": "mpi-ifx",
+        "displayName": "MPI with Inter Fortran",
+        "generator": "Unix Makefiles",
+        "binaryDir": "${sourceDir}/build/mpi-ifx",
+        "cacheVariables": {
+          "CMAKE_BUILD_TYPE": "Release",
+          "CMAKE_Fortran_COMPILER": "ifx"
         }
       },
       {
@@ -31,7 +39,6 @@
         "cacheVariables": {
           "CMAKE_BUILD_TYPE": "Debug",
           "CMAKE_Fortran_COMPILER": "gfortran",
-          "MPI_Fortran_COMPILER": "mpif90",
           "CMAKE_VERBOSE_MAKEFILE": "ON"
         }
       }
@@ -41,9 +48,13 @@
           "name": "mpi-gfortran",
           "configurePreset": "mpi-gfortran"
         },
+        {
+          "name": "mpi-ifot",
+          "configurePreset": "mpi-ifort"
+        },
       {
-        "name": "mpi-ifort",
-        "configurePreset": "mpi-ifort"
+        "name": "mpi-ifx",
+        "configurePreset": "mpi-ifx"
       },
       {
         "name": "debug",

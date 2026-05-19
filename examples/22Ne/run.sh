@@ -8,7 +8,7 @@ export MKL_DYNAMIC=FALSE
 start_time=$(date +%s)
 echo -e "\033[32m run ...\033[0m"
 
-mpirun -np 3 ../../bin/MRCDFT -p 22Ne_para.dat -d 22Ne_b23.dat
+mpiexec -np 2 ../../bin/MRCDFT -p 22Ne_para.dat -d 22Ne_b23.dat
 
 echo calculation is finished !
 end_time=$(date +%s)

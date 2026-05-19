@@ -39,12 +39,26 @@ set_target_properties(MRCDFT PROPERTIES
 if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
     target_compile_options(MRCDFT PRIVATE
         -ffree-line-length-none
+        -fmax-stack-var-size=0
         $<$<CONFIG:Debug>:-g;-fcheck=all;-fbacktrace;-ffpe-trap=invalid,zero,overflow;-Wall>
     )
+    # Windows gfortran stack size
+    if(WIN32)
+        target_link_options(MRCDFT PRIVATE
+            -Wl,--stack,100000000
+    )
+    endif()
+
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Intel|IntelLLVM")
     target_compile_options(MRCDFT PRIVATE
         -free
+        /heap-arrays
         $<$<CONFIG:Debug>:-g;-check;all;-traceback;-warn;all>
+    )
+    target_link_options(MRCDFT PRIVATE
+        /libs:static
+        /Qopenmp-link:static
+        /STACK:100000000
     )
 else()
     target_compile_options(MRCDFT PRIVATE
@@ -60,7 +74,7 @@ find_package(MPI REQUIRED COMPONENTS Fortran)
 find_package(OpenMP REQUIRED COMPONENTS Fortran)
 
 
-set(MKL_LINK dynamic)
+set(MKL_LINK static)
 set(MKL_INTERFACE lp64)
 if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
     set(MKL_THREADING gnu_thread)
