@@ -34,50 +34,10 @@ MR-CDFT is a computational code for nuclear structure calculations for quadrupol
 
     ```bash
     git clone -b master https://github.com/liviler/MRCDFT.git
-    cd MRCDFT
     ```
+2. Install by [Windows + ifx](doc/installation/windows_ifx.md) 
 
-2. Compile the code:
 
-    You can compile the code using either gfortran or Intel Fortran (ifort), depending on the compiler available on your system.
-    * Using CMake 
-        ```bash
-        cmake --preset mpi-gfortran
-        cmake --build --preset mpi-gfortran
-        ```
-    * Using Make
-        ```bash
-        make mpif90
-        ```
-        Before running the make command, ensure that GNU Make and the selected Fortran compiler are properly installed and available in your environment.
-
-    After successful compilation, the executable, the executable `MRCDFT` will be generated in the `bin/` directory.
-
-3. Adding to Environment Variables :
-
-    To run `MRCDFT` from any directory, you need to add the executable path to your system’s PATH environment variable.
-    * Linux / macOS
-        1) Open your shell configuration file (e.g. `~/.bashrc`, `~/.bash_profile`, or `~/.zshrc`).
-        2) Add the following line (replace the path with the actual location of the bin/ directory):
-            ```bash
-            export PATH="/full/path/to/MR_CDFT_f90/bin:$PATH"
-            ```
-        3) Reload the configuration file:
-            ``` bash
-            source ~/.bashrc
-            ```
-        4) Verify the installation:
-            ```bash
-            which MRCDFT
-            ```
-    * Windows
-        1) Open System Properties → Advanced system settings → Environment Variables.
-        2) Under User variables or System variables, select Path and click Edit.
-        3) Add the full path to the bin/ directory containing MRCDFT.exe.
-        4) Open a new command prompt and test:
-            ```cmd
-                MRCDFT
-            ```
 ## Usage
 Run the program using:
 ```bash
@@ -93,11 +53,25 @@ For Windows systems, you can increase the stack size by specifying a larger stac
 
 ### Examples
 
-To run a test calculation for $^{22}{\text{Ne}}$: 
-```bash
-cd examples/22Ne
-bash run.sh
+To run a test calculation for $^{22}\mathrm{Ne}$, open a terminal and navigate to the root directory of the MRCDFT project.
+
+If you are using a **Command Prompt (cmd)** terminal, run:
+
+```cmd
+set OMP_NUM_THREADS=4
+set MKL_NUM_THREADS=4
+```
+These commands set the number of OpenMP and MKL threads used by each MPI process.
+
+If you are using a PowerShell (PS) terminal, run:
+```ps
+$env:OMP_NUM_THREADS=4
+$env:MKL_NUM_THREADS=4
 ```
 
-### Output Description
-TODO: Modify the output file name.
+Then execute the test calculation with:
+```bash
+cd examples/22Ne
+mpiexec -np 2 ../../bin/MRCDFT -p 22Ne_para.dat -d 22Ne_b23.dat
+```
+This example will run with 2 MPI processes, with each process using 4 threads.
