@@ -52,26 +52,31 @@ These two commands set the required compilation environment variables for the cu
 ---
 
 ## Build Instructions
-Use the **Command Prompt** terminal in which the Visual Studio and Intel oneAPI environments have already been set, and navigate to the root directory of the MRCDFT project.
+Use the **Command Prompt** terminal in which the Visual Studio and Intel oneAPI environments have already been set, and navigate to the **root directory of the MRCDFT** project.
 
+### Configure the Build Environment
 First, verify that the compilation environment has been configured correctly by running:
 ```cmd
 cmake --preset mpi-ifx
 ```
-This command configures the project using the predefined CMake preset mpi-ifx. It detects the Intel Fortran compiler, MPI environment, MKL libraries, and generates the corresponding build files in the `build\mpi-ifx\` directory.
+This command configures the project using the predefined CMake preset mpi-ifx. It detects the Intel Fortran compiler, MPI environment, MKL libraries, and generates the corresponding build files in the `build\mpi-ifx\` directory. 
+
+If the `build\mpi-ifx\` directory already exists, it is recommended to delete it before running this command. Otherwise, cached CMake configuration files from previous builds may cause unexpected issues.
 
 If an error occurs, it usually means that the current terminal environment is not configured correctly. In this case, please check whether Visual Studio and Intel oneAPI Toolkit have been installed properly, and make sure the environment initialization commands were executed successfully.
 
-If the command completes successfully, the compilation environment is ready. Then build the project by running:
+### Build the Project
+If the configuration step completes successfully, the compilation environment is ready. You can then build the project by running:
 
 ```cmd
 cmake --build --preset mpi-ifx
 ```
-This command compiles the source code and builds the executable files according to the configuration defined in the mpi-ifx preset.
+This command compiles the source code and generates the executable files according to the configuration defined in the mpi-ifx preset.
 
 After the build completes successfully, the executable file `MRCDFT.exe` will be generated in the project's `bin\` directory.
 
-To run `MRCDFT.exe` from any directory in the command line, you need to add the directory containing `MRCDFT.exe` to your system `PATH` environment variable.
+> [!Tips]
+> To run `MRCDFT.exe` from any directory in the command line, you need to add the directory containing `MRCDFT.exe` to your system `PATH` environment variable.
 
 ## Running a Test Calculation
 
