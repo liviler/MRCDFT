@@ -8,11 +8,13 @@ Before building the project, please install the following dependencies:
 
 1. **CMake**  
    Download and install CMake from:  
+
    https://cmake.org/download/
 
 2. **Visual Studio**  
    Visual Studio is required to provide the Microsoft linker (link.exe) and Windows SDK, which ifx relies on for linking Fortran code into an executable.    If you have already installed Visual Studio, please verify that the version meets the requirements of the Intel oneAPI Toolkit.
    If not installed, download and install Visual Studio Community from:
+
    https://visualstudio.microsoft.com/zh-hans/downloads/
 
    During installation, make sure to select the following workload:
@@ -21,7 +23,8 @@ Before building the project, please install the following dependencies:
    This workload provides the required MSVC compiler and build tools.
 
 3. **Intel oneAPI Toolkit**  
-   Intel oneAPI Toolkit provides the required Fortran compiler (`ifx`), Intel MPI Library, and Intel Math Kernel Library (MKL) needed for building the project. Download and install Intel oneAPI Toolkit from:  
+   Intel oneAPI Toolkit provides the required Fortran compiler (`ifx`), Intel MPI Library, and Intel Math Kernel Library (MKL) needed for building the project. Download and install Intel oneAPI Toolkit from: 
+    
    https://www.intel.com/content/www/us/en/developer/tools/oneapi/oneapi-toolkit-download.html
 
 >  [!Note]
