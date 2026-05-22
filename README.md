@@ -55,6 +55,8 @@ For Windows systems, you can increase the stack size by specifying a larger stac
 
 To run a test calculation for $^{22}\mathrm{Ne}$, open a terminal and navigate to the root directory of the MRCDFT project.
 
+#### Set the number of threads
+
 If you are using a **Command Prompt (cmd)** terminal, run:
 
 ```cmd
@@ -63,13 +65,14 @@ set MKL_NUM_THREADS=4
 ```
 These commands set the number of OpenMP and MKL threads used by each MPI process.
 
-If you are using a PowerShell (PS) terminal, run:
+If you are using a **Power Shell** (PS) terminal, run:
 ```ps
 $env:OMP_NUM_THREADS=4
 $env:MKL_NUM_THREADS=4
 ```
 
-Then execute the test calculation with:
+#### Run with multiple processes
+To run a test calculation for $^{22}\mathrm{Ne}$, execute the test calculation with:
 ```bash
 cd examples/22Ne
 mpiexec -np 2 ../../bin/MRCDFT -p 22Ne_para.dat -d 22Ne_b23.dat
