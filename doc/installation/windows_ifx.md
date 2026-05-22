@@ -75,7 +75,7 @@ This command compiles the source code and generates the executable files accordi
 
 After the build completes successfully, the executable file `MRCDFT.exe` will be generated in the project's `bin\` directory.
 
-> [!Tips]
+> [!TIP]
 > To run `MRCDFT.exe` from any directory in the command line, you need to add the directory containing `MRCDFT.exe` to your system `PATH` environment variable.
 
 ## Running a Test Calculation
