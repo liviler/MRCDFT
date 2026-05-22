@@ -24,7 +24,7 @@ Before building the project, please install the following dependencies:
    Intel oneAPI Toolkit provides the required Fortran compiler (`ifx`), Intel MPI Library, and Intel Math Kernel Library (MKL) needed for building the project. Download and install Intel oneAPI Toolkit from:  
    https://www.intel.com/content/www/us/en/developer/tools/oneapi/oneapi-toolkit-download.html
 
-> Note:
+> [!NOTE] 
 > * Please remember the installation paths of Visual Studio and Intel oneAPI Toolkit, as they will be needed during the later compilation process.
 > * After installing CMake, the environment variables are typically configured automatically. Open a terminal and run `cmake --version` to verify it works. If the command is not recognized, manually add CMake's bin directory (e.g., `C:\Program Files\CMake\bin`) to your system's PATH.
 > * After installing the Intel oneAPI Toolkit, the environment variable is typically configured automatically. Open a terminal and run `mpiexec --version` to verify `mpiexec` works. If the command is not recognized, manually add the bin directory where mpiexec is located (e.g., `C:\Program Files (x86)\Intel\oneAPI\mpi\latest\bin`) to your system PATH.
@@ -37,7 +37,7 @@ After installation, open a **Command Prompt** (cmd) terminal and set the Visual 
 call "C:\Program Files (x86)\Microsoft Visual Studio\18\Community\VC\Auxiliary\Build\vcvars64.bat"
 call "C:\Program Files (x86)\Intel\oneAPI\setvars.bat"
 ```
-> [!NOTE] 
+> [!IMPORTANT]
 > The installation paths may differ depending on your local setup. Please replace the paths above with the actual locations of your `vcvars64.bat` and `setvars.bat` files.
 
 These two commands set the required compilation environment variables for the current terminal session.
