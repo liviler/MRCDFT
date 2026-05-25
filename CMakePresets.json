@@ -1,5 +1,5 @@
 {
-    "version": 3,
+    "version": 6,
     "configurePresets": [
       {
         "name": "mpi-gfortran",
@@ -13,7 +13,7 @@
       },
       {
         "name": "mpi-ifort",
-        "displayName": "MPI with Inter Fortran",
+        "displayName": "MPI with Intel Fortran",
         "generator": "Unix Makefiles",
         "binaryDir": "${sourceDir}/build/mpi-ifort",
         "cacheVariables": {
@@ -23,7 +23,7 @@
       },
       {
         "name": "mpi-ifx",
-        "displayName": "MPI with Inter Fortran",
+        "displayName": "MPI with Intel Fortran",
         "generator": "Unix Makefiles",
         "binaryDir": "${sourceDir}/build/mpi-ifx",
         "cacheVariables": {
@@ -43,15 +43,16 @@
         }
       }
     ],
+    
     "buildPresets": [
       {
           "name": "mpi-gfortran",
           "configurePreset": "mpi-gfortran"
-        },
-        {
-          "name": "mpi-ifot",
-          "configurePreset": "mpi-ifort"
-        },
+      },
+      {
+        "name": "mpi-ifort",
+        "configurePreset": "mpi-ifort"
+      },
       {
         "name": "mpi-ifx",
         "configurePreset": "mpi-ifx"
@@ -60,6 +61,37 @@
         "name": "debug",
         "configurePreset": "debug"
       }
+    ],
+
+    "testPresets": [],
+
+    "packagePresets": [
+      {
+        "name": "mpi-ifx",
+        "configurePreset": "mpi-ifx",
+        "description": "Create CPack package (ifx build)",
+        "packageDirectory": "${sourceDir}/build/mpi-ifx/package"
+      }
+    ],
+
+    "workflowPresets": [
+      {
+        "name": "mpi-ifx-to-build",
+        "steps": [
+          { "type": "configure", "name": "mpi-ifx" },
+          { "type": "build", "name": "mpi-ifx" }
+        ]
+      },
+
+      {
+        "name": "mpi-ifx-to-package",
+        "steps": [
+          { "type": "configure", "name": "mpi-ifx" },
+          { "type": "build", "name": "mpi-ifx" },
+          { "type": "package", "name": "mpi-ifx" }
+        ]
+      }
     ]
+
   }
   

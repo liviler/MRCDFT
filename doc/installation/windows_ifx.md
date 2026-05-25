@@ -6,6 +6,7 @@ This guide describes how to build the project on Windows using CMake, Visual Stu
 
 Before building the project, please install the following dependencies:
 
+###  Required
 1. **CMake**  
    Download and install CMake from:  
 
@@ -27,10 +28,17 @@ Before building the project, please install the following dependencies:
     
    https://www.intel.com/content/www/us/en/developer/tools/oneapi/oneapi-toolkit-download.html
 
+
+
 >  [!Note]
 > * Please remember the installation paths of Visual Studio and Intel oneAPI Toolkit, as they will be needed during the later compilation process.
 > * After installing CMake, the environment variables are typically configured automatically. Open a terminal and run `cmake --version` to verify it works. If the command is not recognized, manually add CMake's bin directory (e.g., `C:\Program Files\CMake\bin`) to your system's PATH.
 > * After installing the Intel oneAPI Toolkit, the environment variable is typically configured automatically. Open a terminal and run `mpiexec --version` to verify `mpiexec` works. If the command is not recognized, manually add the bin directory where mpiexec is located (e.g., `C:\Program Files (x86)\Intel\oneAPI\mpi\latest\bin`) to your system PATH.
+
+### Optional
+- NSIS (only for installer packaging)
+- WiX Toolset (only for installer packaging)
+
 
 ## Environment Setup
 
@@ -47,9 +55,6 @@ These two commands set the required compilation environment variables for the cu
 - `vcvars64.bat` sets the Visual Studio C/C++ build environment, including the MSVC compiler, linker, Windows SDK, and related build tools.
 - `setvars.bat` sets the Intel oneAPI environment, including the Intel Fortran compiler (`ifx`/`ifort`), Intel MPI Library, Intel MKL, and other Intel development tools.
 
-
-
----
 
 ## Build Instructions
 Use the **Command Prompt** terminal in which the Visual Studio and Intel oneAPI environments have already been set, and navigate to the **root directory of the MRCDFT** project.
@@ -78,30 +83,45 @@ After the build completes successfully, the executable file `MRCDFT.exe` will be
 > [!TIP]
 > To run `MRCDFT.exe` from any directory in the command line, you need to add the directory containing `MRCDFT.exe` to your system `PATH` environment variable.
 
-## Running a Test Calculation
+---
+---
 
-After `MRCDFT.exe` has been successfully built, you can either continue using the Command Prompt with the environments set above, or open a new terminal and navigate to the root directory of the MRCDFT project.
+## Install and Package (Option)
+After the project is successfully built, you can optionally install and package the software using CMake and CPack.
 
-#### Set the number of threads
-
-If you are using a **Command Prompt (cmd)** terminal, run:
-
-```cmd
-set OMP_NUM_THREADS=4
-set MKL_NUM_THREADS=4
-```
-These commands set the number of OpenMP and MKL threads used by each MPI process.
-
-If you are using a **Power Shell** (PS) terminal, run:
-```ps
-$env:OMP_NUM_THREADS=4
-$env:MKL_NUM_THREADS=4
-```
-
-#### Run with multiple processes
-To run a test calculation for $^{22}\mathrm{Ne}$, execute the test calculation with:
+### Install to Local Directory
+CMake provides an installation step that copies the compiled executable and required runtime files into a clean directory structure.
+To install the project, run:
 ```bash
-cd examples/22Ne
-mpiexec -np 2 ../../bin/MRCDFT -p 22Ne_para.dat -d 22Ne_b23.dat
+cmake --install build\mpi-ifx --prefix "C:\Program Files\MRCDFT"
 ```
-This example will run with 2 MPI processes, with each process using 4 threads.
+> [!TIP]
+> * The `--prefix` option specifies the installation destination.
+> * If not specified, the default installation path will be `C:\Program Files\MRCDFT` (may require administrator privileges).
+
+### Package the Project
+To create a distributable package (ZIP archive or installer) of the installed project, use cpack (CMake’s packaging tool).
+```bash
+cpack --preset mpi-ifx
+```
+After execution, navigate to `build/mpi-ifx/packages`, You will find the following generated packages: 
+* ZIP archive (portable distribution)
+* NSIS installer (Windows installer)
+* WIX installer
+
+> [!NOTE]
+> To avoid issues where the NSIS installer fails to modify the system PATH (e.g., warning: PATH too long, installer unable to modify PATH) due to long path limitations:
+> Ensure that NSIS is already installed, then download the **large strings build**  from [Special_Builds](https://nsis.sourceforge.io/Special_Builds). Then replace the corresponding files in your existing NSIS installation directory with those from the downloaded zip.
+
+## Workflow
+You can execute the full configure-build–package pipeline in a single command:
+```bash
+cmake --workflow --preset mpi-ifx-to-package
+```
+This command automatically performs the complete workflow defined in the preset, including:
+
+This single command will automatically execute the following steps in sequence:
+* Configure – Run `cmake --preset mpi-ifx`
+* Build – Run `cmake --build --preset mpi-ifx`
+* Package – Run `cpack --preset mpi-ifx`
+

@@ -1,0 +1,12 @@
+<CPackWiXPatch>
+  <CPackWiXFragment Id="@CPACK_WIX_MRCDFT_ID@">
+    <Environment 
+      Id="AddToPath" 
+      Name="PATH" 
+      Value="[INSTALL_ROOT]bin" 
+      Permanent="no" 
+      Part="last" 
+      Action="set" 
+      System="yes" />
+  </CPackWiXFragment>
+</CPackWiXPatch>

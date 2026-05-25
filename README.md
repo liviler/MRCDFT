@@ -35,25 +35,12 @@ MR-CDFT is a computational code for nuclear structure calculations for quadrupol
     ```bash
     git clone -b master https://github.com/liviler/MRCDFT.git
     ```
-2. Install by [Windows + ifx](doc/installation/windows_ifx.md) 
+2.  [Install: Windows + ifx](doc/installation/windows_ifx.md) 
 
 
-## Usage
-Run the program using:
-```bash
-MRCDFT -p para.dat -d b23.dat
-```
-`para.dat` contains the main input parameters, including the nuclear name and mass number, the number of oscillator shells, and other calculation settings. `b23.dat` contains the grid of quadrupole–octupole deformation constraints for the nuclei. And you can use `scripts/run.sh`  to generate these two files.
+## Running a Test Calculation
 
-Note: If you encounter issues caused by memory limits during execution, you can temporarily remove the stack size limit on Linux by running the following command.
-```bash
-ulimit -s unlimited
-```
-For Windows systems, you can increase the stack size by specifying a larger stack allocation during compilation.
-
-### Examples
-
-To run a test calculation for $^{22}\mathrm{Ne}$, open a terminal and navigate to the root directory of the MRCDFT project.
+After `MRCDFT.exe` has been successfully built, open a terminal and navigate to the root directory of the MRCDFT project.
 
 #### Set the number of threads
 
@@ -71,6 +58,11 @@ $env:OMP_NUM_THREADS=4
 $env:MKL_NUM_THREADS=4
 ```
 
+If you are using a **Bash** shell, run
+```bash
+export OMP_NUM_THREADS=4
+export MKL_NUM_THREADS=4
+```
 #### Run with multiple processes
 To run a test calculation for $^{22}\mathrm{Ne}$, execute the test calculation with:
 ```bash
@@ -78,3 +70,5 @@ cd examples/22Ne
 mpiexec -np 2 ../../bin/MRCDFT -p 22Ne_para.dat -d 22Ne_b23.dat
 ```
 This example will run with 2 MPI processes, with each process using 4 threads.
+
+See [USage](./doc/Usage.md) for more information.
