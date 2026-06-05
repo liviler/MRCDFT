@@ -51,6 +51,10 @@ end subroutine set_constraint_parameters
 subroutine calculate_constraint_potential_coefficients(ifPrint)
     !----------------------------------------------------------------
     !    calculation of the constrainting potential for axial case
+    ! 
+    !   Note: 
+    !   1) Constrain the dipole deformation to zero to keep the 
+    !       center of mass at the origin.
     !----------------------------------------------------------------
     logical,intent(in),optional :: ifPrint
     real(r64) :: d1,dc1x,d2,dc2x,d3,dc3x
