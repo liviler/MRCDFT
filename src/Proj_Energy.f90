@@ -296,7 +296,7 @@ Module Energy
         complex(r64),intent(out) :: E_pair,pE_pair
         integer :: i
         complex(r64) :: E_pair_n,E_pair_p,pE_pair_n,pE_pair_p
-        if(option%CDFTType ==0) call initial_pairing_field(.False.)
+        call initial_pairing_field(.False.)
         E_pair_n = (0.0d0,0.0d0)
         E_pair_p = (0.0d0,0.0d0)
         pE_pair_n = (0.0d0,0.0d0)
