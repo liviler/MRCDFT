@@ -197,7 +197,7 @@ subroutine read_CDFT_configuration(ifPrint)
         character(len=*), parameter :: format11 = "(a,2i5)"
         parity_char = ['+','-']
         
-        write(*,"(a)") '============================================================================================'
+        write(*,"(a)") '======================================================================================================'
         if(option%CDFTType == 0) then
             write(*,"(5x,A)")  'CDFT skipped.'
         else 
@@ -248,12 +248,12 @@ subroutine read_CDFT_configuration(ifPrint)
             else if (input_par%option_iBlock==2) then 
                 write(*,"(5x,a,':   ',a)") adjust_left('Block',Strlength), 'Block according to K^pi'
                 if(input_par%K(1)*2-1 > 0) then 
-                    write(*,"(5x,a,':   ',i2,'/2',a)") adjust_left('Block K^pi of Neutron',Strlength),(input_par%K(1)*2-1), parity_char(input_par%Pi(1))
+                    write(*,"(5x,a,':   ',i2,'/2',a)") adjust_left('Block K^pi of Neutron',Strlength),(input_par%K(1)*2-1), parity_char((3-input_par%Pi(1))/2)
                 else 
                     write(*,"(5x,a,':   ',a)") adjust_left('Block K^pi of Neutron',Strlength), 'no'
                 end if 
                 if(input_par%K(2)*2-1 > 0) then
-                    write(*,"(5x,a,':   ',i2,'/2',a)") adjust_left('Block K^pi of Proton',Strlength),(input_par%K(2)*2-1), parity_char(input_par%Pi(2))
+                    write(*,"(5x,a,':   ',i2,'/2',a)") adjust_left('Block K^pi of Proton',Strlength),(input_par%K(2)*2-1), parity_char((3-input_par%Pi(2))/2)
                 else 
                     write(*,"(5x,a,':   ',a)") adjust_left('Block K^pi of Proton',Strlength), 'no'
                 end if 

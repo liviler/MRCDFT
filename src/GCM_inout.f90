@@ -66,14 +66,14 @@ MODULE GCM_Inout
             integer :: Strlength = 40
 
             if(GCM_option%GCMType==0) then 
-                write(*,"(5x,a,':   ',a)") adjust_left('GCM',Strlength),'GCM skipped.'
+                write(*,"(5x,A)") 'GCM skipped.'
             else if(GCM_option%GCMType==1) then
                 write(*,"(5x,A)") 'GCM:'
             end if 
 
             write(*,"(5x,a,': ', i3)") adjust_left('Mmax',Strlength),GCM_HWG%Mmax
             write(*,"(5x,a,': ', 5(e9.2))") adjust_left('Zeta',Strlength),input_par%zeta
-            write(*,"(a)") '=========================================================================================='
+            write(*,"(a)") '===================================================================================================='
         end subroutine
     end subroutine
 
