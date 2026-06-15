@@ -38,6 +38,16 @@ subroutine initial_pairing_field(ifPrint)
     pairing%del = input_par%pairing_del
     pairing%vpair = input_par%pairing_vpair
     ! set other parameters
+    ! only initialize the first loop, and use the calculated value from the previous loop for subsequent loops.
+    if(first_deformation) then
+        do it = 1,2
+            ! initial fermi energy
+            pairing%ala(it) = -7.0
+            ! inital cutoff energy
+            pairing%ecut(it) = 5.d0
+        end do 
+        first_deformation = .False.
+    endif
     do it = 1,2
         pairing%gg(it) = pairing%ga(it)/nucleus_attributes%mass_number + 1.d-10
         ! initial pairing potential
@@ -45,14 +55,6 @@ subroutine initial_pairing_field(ifPrint)
             do ii =1,nghl
                 pairing%delq(ii,it) = pairing%del(it)
             enddo
-        endif
-        ! only initialize the first loop, and use the calculated value from the previous loop for subsequent loops.
-        if(first_deformation) then
-            ! initial fermi energy
-            pairing%ala(it) = -7.0
-            ! inital cutoff energy
-            pairing%ecut(it) = 5.d0
-            first_deformation = .False.
         endif
     enddo
     ! set block
