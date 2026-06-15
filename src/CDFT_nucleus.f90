@@ -49,7 +49,7 @@ subroutine set_nucleus_attributes(ifPrint)
                 if (proton_number.eq.139) proton_number = 140                                                                                
             endif                                                 
         end do  
-        if(np>maxz .or. proton_number==0) stop "Wrong nucleus name !" 
+        if(proton_number==0) stop "Wrong nucleus name !" 
     else
         stop '[Nucleus] proton_number or nucleus_name should be given!'                                                                              
     endif
