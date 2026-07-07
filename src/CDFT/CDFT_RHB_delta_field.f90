@@ -316,14 +316,14 @@ function Talmi_Moshinsky_2D(im1,in1,in2,im3,in3,in4)
     !       \sqrt{\frac{\left(n_{r_1}\right) !\left(n_{r_1}+\left|m_{l_1}\right|\right)!
     !                   \left(n_{r_2}\right) !\left(n_{r_2}+\left|m_{l_2}\right|\right)!}
     !           {\left(N_p\right) !\left(N_p+\left|M_p\right|\right) !\left(n_p\right)!
-    !            \left(n_p+\left|m_p\right|\right) !}} \\ 
+    !            \left(n_p+\left|m_p\right|\right) !}} \\
     !    & \times \delta_{2 n_{r_1}+\left|m_{l_1}\right|+2 n_{r_2}+\left|m_{l_2}\right|, 2 N_p+\left|M_p\right|+2 n_p+\left|m_p\right|} 
-    !             \delta_{m_{l_1}+m_{l_2}, M_p+m_p} \\ 
+    !             \delta_{m_{l_1}+m_{l_2}, M_p+m_p} \\
     !    & \times \sum_{Q, R, S=0}^{N_p} \sum_{T=0}^{M_p} \sum_{q, r, s=0}^{n_p} \sum_{t=0}^{m_p}(-)^{r+s+t}
     !             \left(\begin{array}{cccc}N_p & & \\ N_p-Q-R-S & Q & R & S\end{array}\right)
     !             \left(\begin{array}{c}M_p \\ T\end{array}\right)
     !             \left(\begin{array}{cccc}n_p & & \\ n_p-q-r-s & q & r & s\end{array}\right)
-    !             \left(\begin{array}{c}m_p \\ t\end{array}\right) \\ 
+    !             \left(\begin{array}{c}m_p \\ t\end{array}\right) \\
     !  \end{aligned}
     ! where n1=n_{r_1}, m1=m_{l_1}, n2=n_{r_2}, m2=m_{l_2}, n3=N_p, m3=M_p, n4=n_p, m4=m_p
     !-----------------------------------------------------------------------------------------------------------------------------------

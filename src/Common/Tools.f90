@@ -111,16 +111,16 @@ MODULE Tools
         character(len=*), intent(in) :: dir_path
         integer :: status
     
-        #ifdef _WIN32
-            call execute_command_line( &
-                'cmd /c if not exist "' // trim(dir_path) // &
-                '" mkdir "' // trim(dir_path) // '"', &
-                exitstat=status)
-        #else
-            call execute_command_line( &
-                'mkdir -p "' // trim(dir_path) // '"', &
-                exitstat=status)
-        #endif
+#ifdef _WIN32
+    call execute_command_line( &
+        'cmd /c if not exist "' // trim(dir_path) // &
+        '" mkdir "' // trim(dir_path) // '"', &
+        exitstat=status)
+#else
+    call execute_command_line( &
+        'mkdir -p "' // trim(dir_path) // '"', &
+        exitstat=status)
+#endif
     
         if (status /= 0) then
             write(*,*) "Warning: Failed to create directory:", trim(dir_path)
