@@ -6,7 +6,8 @@ set(LINKER_OPTIONS "")
 if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
     set(COMPILER_OPTIONS 
         -ffree-line-length-none
-        -fmax-stack-var-size=0
+        # -fheap-arrays
+        -cpp
         $<$<CONFIG:Debug>:-g;-fcheck=all;-fbacktrace;-ffpe-trap=invalid,zero,overflow;-Wall>
     )
     # Windows gfortran stack size
@@ -15,16 +16,26 @@ if(CMAKE_Fortran_COMPILER_ID STREQUAL "GNU")
     endif()
     
 elseif(CMAKE_Fortran_COMPILER_ID MATCHES "Intel|IntelLLVM")
-    set(COMPILER_OPTIONS
-        -free
-        /heap-arrays
-        $<$<CONFIG:Debug>:-g;-check;all;-traceback;-warn;all>
-    )
-    set(LINKER_OPTIONS
-        /libs:static
-        /Qopenmp-link:static
-        /STACK:100000000
-    )
+    if(WIN32) # Windows
+        set(COMPILER_OPTIONS
+            /free
+            /heap-arrays
+            /fpp
+            $<$<CONFIG:Debug>:/debug:full;/check:all;/traceback;/warn:all>
+        )
+        set(LINKER_OPTIONS
+            /libs:static
+            /Qopenmp-link:static
+            /STACK:100000000
+        )
+    else() # Linux/macOS
+        set(COMPILER_OPTIONS
+            -free
+            -heap-arrays
+            -fpp
+            $<$<CONFIG:Debug>:-g;-check all;-traceback;-warn all>
+        )
+    endif()
 else()
     set(COMPILER_OPTIONS $<$<CONFIG:Debug>:-g>)
 endif()

@@ -82,7 +82,20 @@
           { "type": "build", "name": "mpi-ifx" }
         ]
       },
-
+      {
+        "name": "mpi-ifort-to-build",
+        "steps": [
+          { "type": "configure", "name": "mpi-ifort" },
+          { "type": "build", "name": "mpi-ifort" }
+        ]
+      },
+      {
+        "name": "mpi-gfortran-to-build",
+        "steps": [
+          { "type": "configure", "name": "mpi-gfortran" },
+          { "type": "build", "name": "mpi-gfortran" }
+        ]
+      },
       {
         "name": "mpi-ifx-to-package",
         "steps": [

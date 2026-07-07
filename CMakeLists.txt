@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.25)
 
 project(MRCDFT LANGUAGES Fortran)
 
@@ -9,7 +9,7 @@ endif()
 set(SRC_DIR "${CMAKE_SOURCE_DIR}/src")
 set(EXE_DIR "${CMAKE_SOURCE_DIR}/bin")
 set(MOD_DIR "${CMAKE_BINARY_DIR}/mod")
-file(GLOB SRC_FILES CONFIGURE_DEPENDS "${SRC_DIR}/*.f90")
+file(GLOB_RECURSE SRC_FILES CONFIGURE_DEPENDS "${SRC_DIR}/*.f90")
 
 
 # Create the executable target
