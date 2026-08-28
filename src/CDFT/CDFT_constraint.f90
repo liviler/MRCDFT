@@ -58,7 +58,7 @@ subroutine calculate_constraint_potential_coefficients(ifPrint)
     !----------------------------------------------------------------
     logical,intent(in),optional :: ifPrint
     real(r64) :: d1,dc1x,d2,dc2x,d3,dc3x
-    if (constraint%icstr.eq.1) then
+    if (constraint%icstr.eq.0) then
         d1   = constraint%calq1-zero
         dc1x = d1/(one/constraint%cspr+abs(d1)/constraint%cmax)
         constraint%c1x  = constraint%c1x + dc1x

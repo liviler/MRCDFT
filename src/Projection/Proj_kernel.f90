@@ -1257,7 +1257,7 @@ Module Kernel
                 it = 1
                 Eccentri_PNP(2) = Eccentri_PNP(2) - fac*Eccentri_arry(2,phi_n_index,it)
                 pEccentri_PNP(2) = pEccentri_PNP(2) - pfac*pEccentri_arry(2,phi_n_index,it)
-                ! each teram of nn
+                ! each term of nn
                 Eccentri_Each_Term_PNP(1) = Eccentri_Each_Term_PNP(1) - fac*Each_2B_Term_arry(1,phi_n_index,it)
                 Eccentri_Each_Term_PNP(2) = Eccentri_Each_Term_PNP(2) - fac*Each_2B_Term_arry(2,phi_n_index,it)
                 Eccentri_Each_Term_PNP(3) = Eccentri_Each_Term_PNP(3) - fac*Each_2B_Term_arry(3,phi_n_index,it)
@@ -1267,7 +1267,7 @@ Module Kernel
                 it = 2
                 Eccentri_PNP(2) = Eccentri_PNP(2) - fac*Eccentri_arry(2,phi_p_index,it)
                 pEccentri_PNP(2) = pEccentri_PNP(2) - pfac*pEccentri_arry(2,phi_p_index,it)
-                ! each teram of nn
+                ! each term of pp
                 Eccentri_Each_Term_PNP(1) = Eccentri_Each_Term_PNP(1) - fac*Each_2B_Term_arry(1,phi_p_index,it)
                 Eccentri_Each_Term_PNP(2) = Eccentri_Each_Term_PNP(2) - fac*Each_2B_Term_arry(2,phi_p_index,it)
                 Eccentri_Each_Term_PNP(3) = Eccentri_Each_Term_PNP(3) - fac*Each_2B_Term_arry(3,phi_p_index,it)
