@@ -845,7 +845,7 @@ Module Kernel
     !------------------------------------------------
     subroutine calculate_overlaps_after_PNP_at_Euler_angles(alpha, beta, gamma, Norm_PNP, pNorm_PNP, Etot_PNP, pEtot_PNP, Particle_PNP, pParticle_PNP,&
                                         N2_PNP,pN2_PNP,J2_PNP, pJ2_PNP, Q2m_PNP, pQ2m_PNP,cQ2m_PNP,pcQ2m_PNP,r2_PNP, pr2_PNP,Eccentri_PNP,pEccentri_PNP)
-        use Globals, only: Proj_option
+        use Globals, only: Proj_option,cal_Energy
         use Mixed, only: calculate_mixed_DensCurrTens_and_norm_overlap
         real(r64), intent(in) :: alpha, beta, gamma
         complex(r64),intent(out) :: Norm_PNP, pNorm_PNP, Etot_PNP, pEtot_PNP, Particle_PNP(2), pParticle_PNP(2),N2_PNP(2),pN2_PNP(2),J2_PNP, pJ2_PNP, &
@@ -859,7 +859,7 @@ Module Kernel
 
         ! Integration over PNP mesh points(phi_it) and spatial coordinates (r,theta,phi)  
         call calculate_norm_overlap_and_particle_number_after_PNP(Norm_PNP,pNorm_PNP,Particle_PNP,pParticle_PNP)
-        call calculate_Rotated_Energy_after_PNP(Etot_PNP,pEtot_PNP)
+        if(cal_Energy) call calculate_Rotated_Energy_after_PNP(Etot_PNP,pEtot_PNP)
         if(Proj_option%checkN2J2 == 1) then
             call calculate_N2_after_PNP(N2_PNP,pN2_PNP)
             call calculate_J2_after_PNP(J2_PNP, pJ2_PNP)

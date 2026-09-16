@@ -16,7 +16,7 @@ PROGRAM MR_CDFT
     use Tools, only: adjust_left,int2str
     use Globals, only: option,Proj_option,GCM_option,outputfile,MPI_Infor
     use MathMethods, only: math_gfv
-    use CDFT_Inout, only: handle_input_config,read_file_b23,read_CDFT_configuration
+    use CDFT_Inout, only: handle_input_config,read_file_b23,read_CDFT_configuration,read_file_factorFile
     use Proj_Inout, only: read_Proj_configuration
     use GCM_Inout, only: read_GCM_configuration
     use Forces, only : set_force_parameters
@@ -45,6 +45,7 @@ PROGRAM MR_CDFT
     call MPI_BARRIER(MPI_COMM_WORLD, ierr)
     call handle_input_config
     call read_file_b23
+    call read_file_factorFile ! read force factor
     call read_CDFT_configuration(.True.)
     call read_Proj_configuration(.True.)
     call read_GCM_configuration(.True.)

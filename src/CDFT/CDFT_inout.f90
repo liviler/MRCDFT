@@ -14,6 +14,7 @@ implicit none
 integer, private :: u_b23 = u_start + 1  ! the unit of InputFile%file_path_b23
 integer, private :: u_cdft = u_start + 2  ! the unit of InputFile%file_path_para
 integer, private :: u_wfs = u_start + 3  ! the unit of  xxx.wel
+integer, private :: u_factor = u_start + 4
 logical :: first_deformation = .True.
 
 contains
@@ -49,6 +50,14 @@ subroutine handle_input_config
                     write(*,*) "Error: -d requires a file path."
                     stop
                 end if
+            case ("-f")
+                if (i + 1 <= n_args) then
+                    call get_command_argument(i + 1, InputFile%file_path_factor)
+                    i = i + 2
+                else
+                    write(*,*) "Error: -f requires a factor path."
+                    stop
+                end if
             ! case("-o")
             !     if (i + 1 <= n_args) then
             !         call get_command_argument(i + 1, OUTPUT_PATH)
@@ -64,8 +73,8 @@ subroutine handle_input_config
     end do
 
     ! Validation
-    if (InputFile%file_path_para == "" .or. InputFile%file_path_b23 == "") then
-        write(*,*) "Error: Both -p and -d arguments are required."
+    if (InputFile%file_path_para == "" .or. InputFile%file_path_b23 == "" .or. InputFile%file_path_factor == "") then
+        write(*,*) "Error: Both -p, -d and -f arguments are required."
         stop
     end if
 
@@ -79,6 +88,10 @@ subroutine handle_input_config
         stop
     end if
 
+    if (.not. file_exists(InputFile%file_path_factor)) then
+        write(*,*) "Error: File not found: ", trim(InputFile%file_path_factor)
+        stop
+    end if
     call make_directory(OUTPUT_PATH)
 
 end subroutine
@@ -118,6 +131,46 @@ subroutine read_file_b23
     constraint%length = length_count
     close(u_b23)
 end subroutine read_file_b23
+
+subroutine read_file_factorFile
+    use Globals, only: Factors
+    integer(i64) :: factor_lines_length
+    integer :: length_count = 0
+    integer :: iostat ! store the io status of the 'read' function 
+    integer(i64) :: index,ifac
+
+    open(u_factor, file=InputFile%file_path_factor, status='old')
+    read(u_factor,'(i7)') Factors%start_index
+    read(u_factor,'(i7)') Factors%end_index
+    read(u_factor,'(i7)') factor_lines_length
+    read(u_factor,'(i7)') Factors%deformation_option
+    read(u_factor,'(i7)') 
+
+    allocate(Factors%facs(factor_lines_length,9))
+    allocate(Factors%beta2(factor_lines_length))
+    
+    do index = 1, factor_lines_length
+        if(length_count >= factor_lines_length) then
+            write(*,*) "[read_file_factorFile]: 'total length' too small"
+            stop
+        end if 
+        read(u_factor,"(10f12.9)",iostat=iostat) (Factors%facs(index,ifac), ifac=1,9),Factors%beta2(index)
+        if (iostat /= 0) then
+            if (iostat < 0) then
+                ! read the end
+                exit
+            else
+                ! error
+                write(*, *) "Error in read_file_factorFile! ","iostat:",iostat
+                stop
+            end if
+        end if
+        length_count = length_count + 1
+    end do
+    Factors%length = length_count
+    if(Factors%length/=factor_lines_length) stop 'total length wrong!'
+    close(u_factor) 
+end subroutine
 
 subroutine read_CDFT_configuration(ifPrint)
     use Globals, only: input_par,iteration,option,OddA,MPI_Infor
@@ -339,6 +392,64 @@ subroutine set_CDFT_output_filename(constraint_beta2,constraint_beta3)
                         //sign_beta3//char(name(4))//char(name(5))//char(name(6))//'.dat'
 end subroutine set_CDFT_output_filename
 
+subroutine set_CDFT_output_filename_with_factor(constraint_beta2,constraint_beta3,index_fac)
+    use Globals, only: BS,nucleus_attributes
+    real(r64),intent(in):: constraint_beta2,constraint_beta3
+    integer,intent(in) :: index_fac
+    character :: sign_beta2, sign_beta3
+    real(r64) :: abs2c, abs3c
+    integer :: A
+    integer(i16), dimension(6) :: name
+    integer(i16) :: name_nf1,name_nf2,name_nf1_sph,name_nf2_sph
+    A = nucleus_attributes%mass_number_int
+    if (constraint_beta2 >= 0.d0) then
+        sign_beta2 = '+'
+    else
+        sign_beta2 = '-'
+    end if
+    if (constraint_beta3 >= 0.d0) then
+        sign_beta3 = '+'
+    else
+        sign_beta3 = '-'
+    end if
+    abs2c = abs(constraint_beta2)
+    abs3c = abs(constraint_beta3)
+    name(1) = abs2c + 48 !In ASCII, character '0' start from 48. 
+    name(2) = mod(abs2c*10,10.d0)+48
+    name(3) = mod(abs2c*100,10.d0)+48
+    name(4) = abs3c+48
+    name(5) = mod(abs3c*10,10.d0)+48
+    name(6) = mod(abs3c*100,10.d0)+48
+    name_nf1 = mod(BS%HO_cyl%n0f/10,10) + 48
+    name_nf2 = mod(BS%HO_cyl%n0f,10) + 48
+    name_nf1_sph = mod(BS%HO_sph%n0f/10,10) + 48
+    name_nf2_sph = mod(BS%HO_sph%n0f,10) + 48
+
+    ! the structure of ouput filenames are `CDFT_ANuclear_eMax`//HO%n0f//constraint_beta2*100//constraint_beta3*100//type
+    ! like 'CDFT_eMax08+140+080.out' means HO%n0f=08, constraint_beta2= +1.40, constraint_beta3= +0.80, type is '.out'
+    outputfile%outputf = OUTPUT_PATH//'CDFT_'//int2str(A)//nucleus_attributes%name &
+                        //'_eMax' //char(name_nf1)//char(name_nf2)//'_'//int2str(index_fac)&
+                        //sign_beta2//char(name(1))//char(name(2))//char(name(3)) &
+                        //sign_beta3//char(name(4))//char(name(5))//char(name(6))//'.out'
+    outputfile%outputw = OUTPUT_PATH//'CDFT_'//int2str(A)//nucleus_attributes%name &
+                        //'_wel'//'_eMax'//char(name_nf1)//char(name_nf2)//'_'//int2str(index_fac) &
+                        //sign_beta2//char(name(1))//char(name(2))//char(name(3)) &
+                        //sign_beta3//char(name(4))//char(name(5))//char(name(6))//'.tmp'
+     outputfile%outdel = OUTPUT_PATH//'CDFT_'//int2str(A)//nucleus_attributes%name &
+                        //'_del'//'_eMax'//char(name_nf1)//char(name_nf2)//'_'//int2str(index_fac) &
+                        //sign_beta2//char(name(1))//char(name(2))//char(name(3)) &
+                        //sign_beta3//char(name(4))//char(name(5))//char(name(6))//'.tmp'
+     outputfile%outputwf=OUTPUT_PATH//'CDFT_'//int2str(A)//nucleus_attributes%name &
+                        //'_wf'//'_eMax'//char(name_nf1_sph)//char(name_nf2_sph)//'_'//int2str(index_fac) &
+                        //sign_beta2//char(name(1))//char(name(2))//char(name(3)) &
+                        //sign_beta3//char(name(4))//char(name(5))//char(name(6))//'.tmp'
+     outputfile%outputd= OUTPUT_PATH//'CDFT_'//int2str(A)//nucleus_attributes%name &
+                        //'_cyl.dens'//'_eMax'//char(name_nf1)//char(name_nf2)//'_'//int2str(index_fac) &
+                        //sign_beta2//char(name(1))//char(name(2))//char(name(3)) &
+                        //sign_beta3//char(name(4))//char(name(5))//char(name(6))//'.dat'
+end subroutine set_CDFT_output_filename_with_factor
+
+
 subroutine read_fields
     !--------------------------------------------------------------------------------------!
     !subroutine read_fields:                                                               ! 
@@ -439,13 +550,14 @@ subroutine write_fields
     close(outputfile%u_outputw)
 end subroutine 
 
-subroutine write_result_DIR
+subroutine write_result_DIR(factor_index)
     use Expectation, only: calculate_expectation_DIR
     use ExpectationRotation, only: calculate_rotational_correction_energy_DIR
-    call calculate_rotational_correction_energy_DIR
+    integer :: factor_index
+    call calculate_rotational_correction_energy_DIR(factor_index)
     call calculate_expectation_DIR(.True.) ! keep True
     call print_single_particle_energies
-    call write_expectation
+    call write_expectation(factor_index)
     call write_wavefuntion
     call write_fields
     call write_densit
@@ -513,17 +625,18 @@ subroutine print_single_particle_energies
 
 end subroutine
 
-subroutine write_expectation
+subroutine write_expectation(factor_index)
     use Globals,only: outputfile,constraint,iteration,expectations
-    character(len=*), parameter ::  format1 = "(a,2x,a5,4x,2(a5,2x),2(a15,2x),3(a9,5x), (a10,4x),(a13,1x))", &
-                                    format2 = "(i3,3x,f12.6,2x,2(f5.2,2x),2(6x,f5.2,6x),5(f12.6,2x))"
+    integer :: factor_index
+    character(len=*), parameter ::  format1 = "(5x,a,2x,a5,4x,2(a5,2x),2(a15,2x),3(a9,5x), (a10,4x),(a13,1x))", &
+                                    format2 = "(i4,1x,i3,3x,f12.6,2x,2(f5.2,2x),2(6x,f5.2,6x),5(f12.6,2x))"
     if(first_deformation) then
         write(outputfile%u_outExpectation,format1) "iteration","  epsi","beta2 ","beta3 ",&
                                                     "beta2_calculate","beta3_calculate","Etot","Erot","Etot-Erot",&
                                                     "rms-Radius","charge-Radius"
         first_deformation = .False.
     endif
-    write(outputfile%u_outExpectation,format2) iteration%ii,iteration%si,&
+    write(outputfile%u_outExpectation,format2) factor_index, iteration%ii,iteration%si,&
             constraint%betac(constraint%index),constraint%bet3c(constraint%index), &
             expectations%beta2,expectations%beta3,&
             expectations%etot,expectations%Erot,expectations%etot-expectations%Erot,&

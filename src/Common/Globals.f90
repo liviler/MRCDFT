@@ -14,6 +14,8 @@ implicit none
 
 public
 
+integer :: cal_Energy = 0
+
 type MPI_Information
     integer :: rank
     integer :: nprocs
@@ -23,6 +25,7 @@ type(MPI_Information) :: MPI_Infor
 type Input_FileName
     character(len=256) :: file_path_para=""
     character(len=256) :: file_path_b23=""
+    character(len=256) :: file_path_factor=""
 end type 
 type(Input_FileName) :: InputFile
 
@@ -107,6 +110,15 @@ type Iteration_Parameters
 end type
 type(Iteration_Parameters) :: iteration
 
+type Factor_Parameter
+    integer :: start_index
+    integer :: end_index
+    integer :: length
+    integer :: deformation_option
+    real(r64), dimension(:,:), allocatable :: facs
+    real(r64), dimension(:), allocatable :: beta2
+end type
+type(Factor_Parameter) :: Factors
 
 type Constraint_Parameter
     integer :: length ! length of data store in betac,bet3c,clam2
@@ -133,7 +145,7 @@ type Constraint_Parameter
     real(r64), dimension(nghl,3) :: vc
 
 end type
-type(Constraint_Parameter) :: constraint
+type(Constraint_Parameter) :: constraint,constraint1,constraint2
 
 
 type WoodsSaxon_Parameters

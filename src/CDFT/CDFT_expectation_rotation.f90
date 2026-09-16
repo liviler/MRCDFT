@@ -12,12 +12,13 @@ use Globals, only: constraint
 implicit none
 logical :: first_deformation = .True.
 contains
-subroutine calculate_rotational_correction_energy_DIR
+subroutine calculate_rotational_correction_energy_DIR(factor_index)
     !-----------------------------------------------------
     !   Even-Even: Erot = <J^2>/(2I_x)
     !   Odd-A    : Erot = (<J^2>- K^2)/(2I_x) 
     !-----------------------------------------------------
     use Globals,only: expectations,option,OddA,pairing
+    integer :: factor_index
     real(r64),dimension(3) :: JSquare
     real(r64),dimension(3) :: IM
     real(r64) :: Jx, Jz
@@ -55,15 +56,15 @@ subroutine calculate_rotational_correction_energy_DIR
     contains
     subroutine write_Erot
         use Globals,only: outputfile,constraint
-        character(len=*), parameter ::  format1 = "(2(a5,2x),8(a9,5x))", &
-                                        format2 = "(2(f5.2,2x),8(f12.8,2x))"
+        character(len=*), parameter ::  format1 = "(6x,2(a5,2x),8(a9,5x))", &
+                                        format2 = "(i4,2x,2(f5.2,2x),8(f12.8,2x))"
         if(first_deformation) then
             write(outputfile%u_rotationalE,format1) "beta2 ","beta3 ","Erot  ",&
                                                     "I_x  ", "  <J^2_x>","  <J^2_y>","  <J^2_z>",&
                                                     "  <J_x> ","  <J_y> ","  <J_z> "
             first_deformation = .False.
         endif
-        write(outputfile%u_rotationalE,format2) constraint%betac(constraint%index),constraint%bet3c(constraint%index),&
+        write(outputfile%u_rotationalE,format2) factor_index,constraint%betac(constraint%index),constraint%bet3c(constraint%index),&
               Erot,IM(1),JSquare(1),JSquare(2),JSquare(3),Jx,dble(Jy),Jz
     end subroutine
 end subroutine

@@ -12,6 +12,48 @@ use Globals, only: constraint
 implicit none
 contains
 
+subroutine select_the_constraint_deformation(factor_index,option)
+    use Globals, only: constraint, Factors
+    integer :: factor_index, option
+    if(option==0) then 
+        ! deformation from b23.dat file
+        write(*,*) 'deformation from b23.dat.'
+    else 
+        ! deformation from factor file
+        constraint%length = 1
+        constraint%betac(1) = Factors%beta2(factor_index)
+        constraint%bet3c(1) = 0.d0
+        write(*,*) 'deformation from factor file.'
+    end if
+
+end subroutine
+
+subroutine select_the_constraint_deformation_space(factor_index1,factor_index2,option)
+    use Globals, only: constraint,constraint1,constraint2,Factors
+    integer :: factor_index1,factor_index2,option
+    if(.not. allocated(constraint1%betac)) allocate(constraint1%betac(size(constraint%betac)))
+    if(.not. allocated(constraint1%bet3c)) allocate(constraint1%bet3c(size(constraint%bet3c)))
+    if(.not. allocated(constraint1%clam2)) allocate(constraint1%clam2(size(constraint%clam2)))
+    if(.not. allocated(constraint2%betac)) allocate(constraint2%betac(size(constraint%betac)))
+    if(.not. allocated(constraint2%bet3c)) allocate(constraint2%bet3c(size(constraint%bet3c)))
+    if(.not. allocated(constraint2%clam2)) allocate(constraint2%clam2(size(constraint%clam2)))
+    if(option==0) then ! from b23.dat
+        constraint1%length = constraint%length
+        constraint1%betac = constraint%betac
+        constraint1%bet3c = constraint%bet3c
+        constraint2%length = constraint%length
+        constraint2%betac = constraint%betac
+        constraint2%bet3c = constraint%bet3c
+    else ! from factor file
+        constraint1%length = 1
+        constraint1%betac(1) = Factors%beta2(factor_index1)
+        constraint1%bet3c(1) = 0.d0
+        constraint2%length = 1
+        constraint2%betac(1) = Factors%beta2(factor_index2)
+        constraint2%bet3c(1) = 0.d0
+    end if
+end subroutine
+
 subroutine set_constraint_parameters
     !----------------------------------------------------------------
     ! `constraint%c1x constraint%c2x constraint%c3x` will be updated 
@@ -58,7 +100,7 @@ subroutine calculate_constraint_potential_coefficients(ifPrint)
     !----------------------------------------------------------------
     logical,intent(in),optional :: ifPrint
     real(r64) :: d1,dc1x,d2,dc2x,d3,dc3x
-    if (constraint%icstr.eq.1) then
+    if (constraint%icstr.eq.0) then
         d1   = constraint%calq1-zero
         dc1x = d1/(one/constraint%cspr+abs(d1)/constraint%cmax)
         constraint%c1x  = constraint%c1x + dc1x

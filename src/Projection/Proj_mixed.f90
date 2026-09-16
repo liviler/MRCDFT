@@ -89,7 +89,7 @@ end subroutine
 
 
 subroutine calculate_mixed_DensCurrTens_and_norm_overlap(alpha, beta, gamma)
-    use Globals, only: Proj_option,projection_mesh
+    use Globals, only: Proj_option,projection_mesh,cal_Energy
     real(r64), intent(in) :: alpha, beta, gamma
     integer :: it, iphi
     real(r64) :: phi
@@ -103,7 +103,7 @@ subroutine calculate_mixed_DensCurrTens_and_norm_overlap(alpha, beta, gamma)
             ! rho_mm', kappa_mm', kappa*_mm'
             call calculate_mixed_density_tensor_matrix_elements(iphi,phi,it)
             ! rho_S_it, rho_V_it, ...
-            call calculate_mixed_density_current_tensor_in_coordinate_space(iphi,it)
+            if(cal_Energy) call calculate_mixed_density_current_tensor_in_coordinate_space(iphi,it)
             ! <q1|R(alpha,beta,gamma)e^{i phi_it N}|q2>
             call calculate_norm_overlap(iphi,phi,it)
         end do
